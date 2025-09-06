@@ -171,7 +171,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="container mx-auto px-6 py-16">
         <Card className="shadow-[var(--medical-glow)] border-medical-secondary/30 bg-gradient-to-r from-primary/5 to-info/5">
           <CardContent className="text-center py-12">
