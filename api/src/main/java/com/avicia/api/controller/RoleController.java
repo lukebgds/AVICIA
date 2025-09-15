@@ -1,8 +1,6 @@
 package com.avicia.api.controller;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,10 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.RoleDTO;
-import com.avicia.api.data.mapper.RoleMapper;
-import com.avicia.api.model.Role;
-import com.avicia.api.repository.RoleRepository;
-
+import com.avicia.api.service.RoleService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -26,57 +21,41 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoleController {
 
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
 
     @PostMapping // localhost:9081/api/roles
     public ResponseEntity<RoleDTO> criar(@RequestBody RoleDTO dto) {
-        
-        Role role = RoleMapper.toEntity(dto);
-        Role salvo = roleRepository.save(role);
-
-        return ResponseEntity.ok(RoleMapper.toDTO(salvo));
+        return ResponseEntity.ok(roleService.criar(dto));
     }
 
     @GetMapping // localhost:9081/api/roles
     public ResponseEntity<List<RoleDTO>> listarTodos() {
-        
-        List<RoleDTO> lista = roleRepository.findAll()
-                .stream()
-                .map(RoleMapper::toDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(roleService.listarTodos());
     }
 
     @GetMapping("/{nome}") // localhost:9081/api/roles/{nome}
     public ResponseEntity<RoleDTO> buscarPorNome(@PathVariable String nome) {
         
-        Optional<Role> role = roleRepository.findByNome(nome);
-
-        return role.map(r -> ResponseEntity.ok(RoleMapper.toDTO(r)))
-                   .orElse(ResponseEntity.notFound().build());
+        return roleService.buscarPorNome(nome)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{nome}") // localhost:9081/api/roles/{nome}
     public ResponseEntity<RoleDTO> atualizar(@PathVariable String nome, @RequestBody RoleDTO dto) {
         
-        return roleRepository.findByNome(nome).map(role -> {
-            role.setNome(dto.getNome());
-            role.setDescricao(dto.getDescricao());
-            role.setPermissoes(dto.getPermissoes());
-
-            Role atualizado = roleRepository.save(role);
-            return ResponseEntity.ok(RoleMapper.toDTO(atualizado));
-        }).orElse(ResponseEntity.notFound().build());
+        return roleService.atualizar(nome, dto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{nome}") // localhost:9081/api/roles/{nome}
-    public ResponseEntity<Void> deletar(@PathVariable String name) {
+    public ResponseEntity<Void> deletar(@PathVariable String nome) {
         
-        return roleRepository.findByNome(name).map(role -> {
-            roleRepository.delete(role);
-            return ResponseEntity.noContent().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        boolean deletado = roleService.deletar(nome);
+
+        return deletado ? ResponseEntity.noContent().build()
+                        : ResponseEntity.notFound().build();
     }
 
 }

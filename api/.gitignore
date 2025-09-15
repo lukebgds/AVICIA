@@ -34,3 +34,13 @@ build/
 
 ### ENVIRONMENT ###
 .env
+
+### DATA BABE ###
+
+src/main/resources/database/
+
+### SSH ###
+
+src/main/resources/keys/
+
+

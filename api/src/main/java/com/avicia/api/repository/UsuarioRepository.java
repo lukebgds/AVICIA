@@ -6,12 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.avicia.api.model.Usuario;
 
+
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer>{
 
-    // Busca Por CPF
+    // Busca por CPF
     Optional<Usuario> findByCpf(String cpf);
 
+    // Busca por Nome
+    Optional<Usuario> findByNome(String nome);
+
     // Verifica se o usuário está ativo
-    Optional<Usuario> findByCpfAndAtivoTrue(String email);
+    Optional<Usuario> findByCpfAndAtivoTrue(String cpf);
 
 }
