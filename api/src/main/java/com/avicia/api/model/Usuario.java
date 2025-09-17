@@ -2,7 +2,6 @@ package com.avicia.api.model;
 
 import java.time.LocalDate;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -21,7 +20,6 @@ import lombok.Setter;
 public class Usuario {
 
     @Id
-    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private Integer idUsuario;
 

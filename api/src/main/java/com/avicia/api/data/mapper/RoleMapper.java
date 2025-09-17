@@ -1,6 +1,6 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.RoleDTO;
+import com.avicia.api.data.dto.object.RoleDTO;
 import com.avicia.api.model.Role;
 
 public class RoleMapper {

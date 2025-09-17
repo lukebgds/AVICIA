@@ -3,8 +3,8 @@ package com.avicia.api.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.LoginAdminRequest;
-import com.avicia.api.data.dto.LoginRequest;
+import com.avicia.api.data.dto.request.LoginAdminRequest;
+import com.avicia.api.data.dto.request.LoginRequest;
 import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.UsuarioRepository;
 

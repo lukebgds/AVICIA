@@ -1,4 +1,4 @@
-package com.avicia.api.data.dto;
+package com.avicia.api.data.dto.request;
 
 public record LoginRequest
 (

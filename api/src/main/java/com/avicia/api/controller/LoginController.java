@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.LoginAdminRequest;
-import com.avicia.api.data.dto.LoginRequest;
-import com.avicia.api.data.dto.LoginResponse;
+import com.avicia.api.data.dto.request.LoginAdminRequest;
+import com.avicia.api.data.dto.request.LoginRequest;
+import com.avicia.api.data.dto.response.LoginResponse;
 import com.avicia.api.repository.UsuarioRepository;
 import com.avicia.api.service.LoginService;
 import com.avicia.api.service.TokenService;

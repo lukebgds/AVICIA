@@ -35,7 +35,7 @@ build/
 ### ENVIRONMENT ###
 .env
 
-### DATA BABE ###
+### DATA BASE ###
 
 src/main/resources/database/
 

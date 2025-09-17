@@ -1,6 +1,6 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.UsuarioDTO;
+import com.avicia.api.data.dto.object.UsuarioDTO;
 import com.avicia.api.model.Role;
 import com.avicia.api.model.Usuario;
 

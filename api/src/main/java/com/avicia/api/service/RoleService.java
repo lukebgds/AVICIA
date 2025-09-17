@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.RoleDTO;
+import com.avicia.api.data.dto.object.RoleDTO;
 import com.avicia.api.data.mapper.RoleMapper;
 import com.avicia.api.model.Role;
 import com.avicia.api.repository.RoleRepository;

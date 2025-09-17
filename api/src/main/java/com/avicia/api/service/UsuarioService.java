@@ -4,9 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.UsuarioDTO;
+import com.avicia.api.data.dto.object.UsuarioDTO;
 import com.avicia.api.data.mapper.UsuarioMapper;
 import com.avicia.api.model.Role;
 import com.avicia.api.model.Usuario;
@@ -20,7 +21,10 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+
     private final RoleRepository roleRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioDTO criar(UsuarioDTO dto) {
         
@@ -30,6 +34,9 @@ public class UsuarioService {
         Role role = roleRepository.findByIdRole(dto.getIdRole())
             .orElseThrow(() -> new RuntimeException("Role não Encontrada"));
         usuario.setIdRole(role);    
+
+        // Criptografia da Senha
+        usuario.setSenhaHash(passwordEncoder.encode(usuario.getSenhaHash()));
 
         Usuario salvo = usuarioRepository.save(usuario);
 
@@ -66,6 +73,23 @@ public class UsuarioService {
 
             Usuario atualizado = usuarioRepository.save(usuario);
             return UsuarioMapper.toDTO(atualizado);
+        });
+    }
+
+    public Optional<UsuarioDTO> atualizarSenha(String cpf, String senhaAtual, String senhaNova) {
+        return usuarioRepository.findByCpf(cpf).map(usuario -> {
+            
+                // Verifica se a senha atual está correta
+                if(!passwordEncoder.matches(senhaAtual, usuario.getSenhaHash())) {
+                    throw new RuntimeException("Senha atual incorreta!");
+                }
+
+                // Criptografa a senha nova
+                usuario.setSenhaHash(passwordEncoder.encode(senhaNova));
+
+                Usuario atualizado = usuarioRepository.save(usuario);
+
+                return UsuarioMapper.toDTO(atualizado);
         });
     }
 
