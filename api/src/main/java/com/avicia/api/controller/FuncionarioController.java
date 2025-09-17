@@ -34,7 +34,7 @@ public class FuncionarioController {
         return ResponseEntity.ok(funcionarioService.listarTodos());
     }
 
-    @GetMapping("/{idAdministrativo}") // localhost:9081/api/funcionarios/{idAdministrativo}
+    @GetMapping("/id/{idAdministrativo}") // localhost:9081/api/funcionarios/{idAdministrativo}
     public ResponseEntity<FuncionarioDTO> buscarPorId(@PathVariable Integer idAdministrativo) {
         
         return funcionarioService.buscarPorId(idAdministrativo)
@@ -42,7 +42,7 @@ public class FuncionarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/matricula/{matricula}") // localhost:9081/api/funcionarios/matricula/{matricula}
+    @GetMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
     public ResponseEntity<FuncionarioDTO> buscarPorMatricula(@PathVariable String matricula) {
 
         return funcionarioService.buscarPorMatricula(matricula)
@@ -50,18 +50,18 @@ public class FuncionarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{idAdministrativo}") // localhost:9081/api/funcionarios/{idAdministrativo}
-    public ResponseEntity<FuncionarioDTO> atualizar(@PathVariable Integer idAdministrativo, @RequestBody FuncionarioDTO dto) {
+    @PutMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
+    public ResponseEntity<FuncionarioDTO> atualizar(@PathVariable String matricula, @RequestBody FuncionarioDTO dto) {
 
-        return funcionarioService.atualizar(idAdministrativo, dto)
+        return funcionarioService.atualizar(matricula, dto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{idAdministrativo}") // localhost:9081/api/funcionarios/{idAdministrativo}
-    public ResponseEntity<Void> deletar(@PathVariable Integer idAdministrativo) {
+    @DeleteMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
+    public ResponseEntity<Void> deletar(@PathVariable String matricula) {
 
-        boolean deletado = funcionarioService.deletar(idAdministrativo);
+        boolean deletado = funcionarioService.deletar(matricula);
         
         return deletado ? ResponseEntity.noContent().build()
                         : ResponseEntity.notFound().build();

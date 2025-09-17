@@ -57,9 +57,9 @@ public class FuncionarioService {
                 .map(FuncionarioMapper::toDTO);
     }
 
-    public Optional<FuncionarioDTO> atualizar(Integer idAdministrativo, FuncionarioDTO dto) {
+    public Optional<FuncionarioDTO> atualizar(String matricula, FuncionarioDTO dto) {
 
-        return funcionarioRepository.findById(idAdministrativo).map(funcionario -> {
+        return funcionarioRepository.findByMatricula(matricula).map(funcionario -> {
             funcionario.setCargo(dto.getCargo());
             funcionario.setSetor(dto.getSetor());
             funcionario.setMatricula(dto.getMatricula());
@@ -76,9 +76,9 @@ public class FuncionarioService {
         });        
     }
 
-    public boolean deletar(Integer idAdministrativo) {
+    public boolean deletar(String matricula) {
         
-        return funcionarioRepository.findById(idAdministrativo).map(funcionario -> {
+        return funcionarioRepository.findByMatricula(matricula).map(funcionario -> {
             funcionarioRepository.delete(funcionario);
             return true;
         }).orElse(false);

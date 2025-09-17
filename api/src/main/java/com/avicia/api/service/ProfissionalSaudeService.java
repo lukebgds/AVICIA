@@ -1,4 +1,4 @@
-package com.avicia.api.security;
+package com.avicia.api.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,10 @@ public class ProfissionalSaudeService {
     public ProfissionalSaudeDTO criar(ProfissionalSaudeDTO dto) {
 
         ProfissionalSaude profissional = ProfissionalSaudeMapper.toEntity(dto);
-
+	
+	    /*
+		    Lembrar de garantir que o usuário seja registrado antes do profissional de saude caso contrario isso vai dar erro
+	    */
         Usuario usuario = usuarioRepository.findById(dto.getUsuario().getIdUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         profissional.setUsuario(usuario);
@@ -62,9 +65,9 @@ public class ProfissionalSaudeService {
                 .map(ProfissionalSaudeMapper::toDTO);
     }
 
-    public Optional<ProfissionalSaudeDTO> atualizar(Integer idProfissional, ProfissionalSaudeDTO dto) {
+    public Optional<ProfissionalSaudeDTO> atualizar(String matricula, ProfissionalSaudeDTO dto) {
 
-        return profissionalRepository.findById(idProfissional).map(profissional -> {
+        return profissionalRepository.findByMatricula(matricula).map(profissional -> {
             profissional.setMatricula(dto.getMatricula());
             profissional.setRegistroConselho(dto.getRegistroConselho());
             profissional.setEspecialidade(dto.getEspecialidade());
@@ -81,9 +84,9 @@ public class ProfissionalSaudeService {
         });
     }
 
-    public boolean deletar(Integer idProfissional) {
+    public boolean deletar(String matricula) {
         
-        return profissionalRepository.findById(idProfissional).map(profissional -> {
+        return profissionalRepository.findByMatricula(matricula).map(profissional -> {
             profissionalRepository.delete(profissional);
             return true;
         }).orElse(false);

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.object.ProfissionalSaudeDTO;
-import com.avicia.api.security.ProfissionalSaudeService;
+import com.avicia.api.service.ProfissionalSaudeService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -58,18 +58,18 @@ public class ProfissionalSaudeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{idProfissional}")
-    public ResponseEntity<ProfissionalSaudeDTO> atualizar(@PathVariable Integer idProfissional, @RequestBody ProfissionalSaudeDTO dto) {
+    @PutMapping("/{matricula}")
+    public ResponseEntity<ProfissionalSaudeDTO> atualizar(@PathVariable String matricula, @RequestBody ProfissionalSaudeDTO dto) {
 
-        return profissionalService.atualizar(idProfissional, dto)
+        return profissionalService.atualizar(matricula, dto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{idProfissional}")
-    public ResponseEntity<Void> deletar(@PathVariable Integer idProfissional) {
+    @DeleteMapping("/{matricula}")
+    public ResponseEntity<Void> deletar(@PathVariable String matricula) {
         
-        boolean deletado = profissionalService.deletar(idProfissional);
+        boolean deletado = profissionalService.deletar(matricula);
         
         return deletado ? ResponseEntity.noContent().build()
                         : ResponseEntity.notFound().build();

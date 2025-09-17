@@ -7,7 +7,7 @@ import com.avicia.api.model.Usuario;
 
 public class FuncionarioMapper {
 
-public static FuncionarioDTO toDTO(Funcionario funcionario) {
+    public static FuncionarioDTO toDTO(Funcionario funcionario) {
 
         FuncionarioDTO dto = new FuncionarioDTO();
 
