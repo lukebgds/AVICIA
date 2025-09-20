@@ -1,33 +1,48 @@
+// login version final
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Lock, User, Mail, Stethoscope } from "lucide-react";
+import { UserPlus, Lock, User, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [userType, setUserType] = useState("");
+  const [loginData, setLoginData] = useState({ cpf: '', senha: '' });
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setLoginData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
+    setLoading(true);
+    
+    try {
+      await api.loginPaciente({ 
+        cpf: loginData.cpf, 
+        senha: loginData.senha 
+      });
+      
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao AVICIA",
       });
-      navigate("/dashboard");
-    } else {
+      navigate("/paciente/home");
+    } catch (error: any) {
       toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Sua conta foi criada no AVICIA",
+        title: "Erro no login",
+        description: error.message || "CPF ou senha incorretos",
+        variant: "destructive",
       });
-      setIsLogin(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,109 +66,60 @@ const Login = () => {
         <Card className="shadow-[var(--medical-glow)] border-medical-secondary/30">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-primary">
-              {isLogin ? "Entrar" : "Criar Conta"}
+              Entrar
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        placeholder="Seu nome completo"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="userType">Tipo de Usuário</Label>
-                    <Select value={userType} onValueChange={setUserType} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo de usuário" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="medico">Médico</SelectItem>
-                        <SelectItem value="gestao">Gestão/Secretário</SelectItem>
-                        <SelectItem value="paciente">Paciente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="cpf">CPF</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
+                    id="cpf"
+                    type="text"
+                    placeholder="000.000.000-00"
                     className="pl-10"
                     required
+                    value={loginData.cpf}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="senha">Senha</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="password"
+                    id="senha"
                     type="password"
                     placeholder="Sua senha"
                     className="pl-10"
                     required
+                    value={loginData.senha}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
 
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirme sua senha"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-primary to-info hover:from-primary/90 hover:to-info/90 transition-all duration-300"
               >
-                {isLogin ? "Entrar" : "Criar Conta"}
+                {loading ? "Entrando..." : "Entrar"} 
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <Button
                 variant="ghost"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => navigate("/cadastro")}
                 className="text-primary hover:text-primary/80"
               >
-                {isLogin ? (
-                  <>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Não tem conta? Cadastre-se
-                  </>
-                ) : (
-                  "Já tem conta? Entre aqui"
-                )}
+                <UserPlus className="h-4 w-4 mr-2" />
+                Não tem conta? Cadastre-se
               </Button>
             </div>
           </CardContent>

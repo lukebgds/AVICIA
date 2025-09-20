@@ -1,13 +1,13 @@
 package com.avicia.api.controller;
 
-import java.time.Instant;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+<<<<<<< HEAD
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+=======
+>>>>>>> 41670921e8b8fd8615a42cd64f35fff2434f52d6
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

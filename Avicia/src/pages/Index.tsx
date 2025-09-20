@@ -171,6 +171,7 @@ const Index = () => {
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="container mx-auto px-6 py-16">
         <Card className="shadow-[var(--medical-glow)] border-medical-secondary/30 bg-gradient-to-r from-primary/5 to-info/5">
           <CardContent className="text-center py-12">
@@ -178,6 +179,7 @@ const Index = () => {
               Pronto para começar?
             </h3>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
+              Junte-se a centenas de profissionais que já confiam no AVICIA para gerenciar seus prontuários médicos.
             </p>
             <Button 
               size="lg" 
