@@ -74,8 +74,7 @@ CREATE TABLE cadastro.usuario_profissional_saude (
   registro_conselho varchar NOT NULL,
   especialidade varchar NOT NULL,
   cargo varchar NOT NULL,
-  unidade varchar NOT NULL,
-  ativo boolean NOT NULL
+  unidade varchar NOT NULL
 );
 
 CREATE TABLE cadastro.usuario_funcionario (
@@ -84,8 +83,7 @@ CREATE TABLE cadastro.usuario_funcionario (
   cargo varchar NOT NULL,
   setor varchar NOT NULL,
   matricula varchar UNIQUE NOT NULL,
-  observacoes text,
-  ativo boolean NOT NULL
+  observacoes text
 );
 
 CREATE TABLE cadastro.paciente_convenio (
