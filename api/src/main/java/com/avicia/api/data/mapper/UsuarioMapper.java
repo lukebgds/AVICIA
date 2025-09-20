@@ -1,14 +1,17 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.object.UsuarioDTO;
-import com.avicia.api.model.Role;
+
+import com.avicia.api.data.dto.request.UsuarioRequest;
+import com.avicia.api.data.dto.response.UsuarioResponse;
 import com.avicia.api.model.Usuario;
 
 public class UsuarioMapper {
 
-    public static UsuarioDTO toDTO(Usuario usuario) {
+    public static UsuarioResponse toResponseDTO(Usuario usuario) {
 
-        UsuarioDTO dto = new UsuarioDTO();
+        if (usuario == null) return null;
+
+        UsuarioResponse dto = new UsuarioResponse();
 
         dto.setIdUsuario(usuario.getIdUsuario());
         dto.setNome(usuario.getNome());
@@ -24,18 +27,17 @@ public class UsuarioMapper {
         return dto;
     }
 
-    public static Usuario toEntity(UsuarioDTO dto){
+    public static Usuario toEntity(UsuarioRequest dto){
 
         Usuario usuario = new Usuario();
 
-        usuario.setIdUsuario(dto.getIdUsuario());
         usuario.setNome(dto.getNome());
         usuario.setSobrenome(dto.getSobrenome());
         usuario.setCpf(dto.getCpf());
         usuario.setEmail(dto.getEmail());
         usuario.setTelefone(dto.getTelefone());
         usuario.setAtivo(dto.getAtivo());
-        usuario.setAtivo(dto.getMfaHabilitado());
+        usuario.setMfaHabilitado(dto.getMfaHabilitado());
         usuario.setDataCriacao(dto.getDataCriacao());
 
         return usuario;

@@ -2,12 +2,15 @@ package com.avicia.api.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.object.UsuarioDTO;
+import com.avicia.api.data.dto.request.UsuarioRequest;
+import com.avicia.api.data.dto.response.UsuarioResponse;
 import com.avicia.api.data.mapper.UsuarioMapper;
 import com.avicia.api.model.Role;
 import com.avicia.api.model.Usuario;
@@ -20,42 +23,59 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UsuarioService {
 
+    @Autowired
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
     private final RoleRepository roleRepository;
 
+    @Autowired
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioDTO criar(UsuarioDTO dto) {
+    public UsuarioResponse criar(UsuarioRequest dto) {
         
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        // Verifica se a role do usuário existe
-        Role role = roleRepository.findByIdRole(dto.getIdRole())
-            .orElseThrow(() -> new RuntimeException("Role não Encontrada"));
-        usuario.setIdRole(role);    
+        // Verifica se a role existe pelo ID
+        Role role = roleRepository.findById(dto.getIdRole())
+            .orElseThrow(() -> new RuntimeException("Role não encontrada"));
+        usuario.setIdRole(role);
 
-        // Criptografia da Senha
-        usuario.setSenhaHash(passwordEncoder.encode(usuario.getSenhaHash()));
+        // Geração do ID do usuário: ID da role + número aleatório de 6 dígitos
+        String numeroAleatorio = String.format("%06d", new Random().nextInt(1_000_000));
+        String idGeradoStr = role.getIdRole() + numeroAleatorio;
+
+        Integer idGerado = Integer.parseInt(idGeradoStr);
+
+        // Garante que o ID seja único
+        while (usuarioRepository.existsById(idGerado)) {
+            numeroAleatorio = String.format("%06d", new Random().nextInt(1_000_000));
+            idGeradoStr = role.getIdRole() + numeroAleatorio;
+            idGerado = Integer.parseInt(idGeradoStr);
+        }
+
+        usuario.setIdUsuario(idGerado);
+
+        // Criptografia da senha
+        usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
 
         Usuario salvo = usuarioRepository.save(usuario);
-
-        return UsuarioMapper.toDTO(salvo);
+        return UsuarioMapper.toResponseDTO(salvo);
     }
 
-    public List<UsuarioDTO> listarTodos() {
+    public List<UsuarioResponse> listarTodos() {
         
         return usuarioRepository.findAll()
                 .stream()
-                .map(UsuarioMapper::toDTO)
+                .map(UsuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<UsuarioDTO> buscaPorCpf(String cpf) {
-        return usuarioRepository.findByCpf(cpf).map(UsuarioMapper::toDTO);
+    public Optional<UsuarioResponse> buscaPorCpf(String cpf) {
+        return usuarioRepository.findByCpf(cpf).map(UsuarioMapper::toResponseDTO);
     }
 
-    public Optional<UsuarioDTO> atualizar(String cpf, UsuarioDTO dto) {
+    public Optional<UsuarioResponse> atualizar(String cpf, UsuarioRequest dto) {
         return usuarioRepository.findByCpf(cpf).map(usuario -> {
             usuario.setNome(dto.getNome());
             usuario.setSobrenome(dto.getSobrenome());
@@ -66,17 +86,17 @@ public class UsuarioService {
             usuario.setMfaHabilitado(dto.getMfaHabilitado());
             usuario.setDataCriacao(dto.getDataCriacao());
 
-            // Verifica se a role do usuário existe
-            Role role = roleRepository.findByIdRole(dto.getIdRole())
-                    .orElseThrow(() -> new RuntimeException("Role não encontrada"));
+            // Verifica se a role existe pelo ID
+            Role role = roleRepository.findById(dto.getIdRole())
+                .orElseThrow(() -> new RuntimeException("Role não encontrada"));
             usuario.setIdRole(role);
 
             Usuario atualizado = usuarioRepository.save(usuario);
-            return UsuarioMapper.toDTO(atualizado);
+            return UsuarioMapper.toResponseDTO(atualizado);
         });
     }
 
-    public Optional<UsuarioDTO> atualizarSenha(String cpf, String senhaAtual, String senhaNova) {
+    public Optional<UsuarioResponse> atualizarSenha(String cpf, String senhaAtual, String senhaNova) {
         return usuarioRepository.findByCpf(cpf).map(usuario -> {
             
                 // Verifica se a senha atual está correta
@@ -89,7 +109,7 @@ public class UsuarioService {
 
                 Usuario atualizado = usuarioRepository.save(usuario);
 
-                return UsuarioMapper.toDTO(atualizado);
+                return UsuarioMapper.toResponseDTO(atualizado);
         });
     }
 

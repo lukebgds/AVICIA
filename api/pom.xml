@@ -83,6 +83,11 @@
 			<artifactId>spring-dotenv</artifactId>
 			<version>4.0.0</version>
 		</dependency>
+			<dependency>
+			<groupId>com.vladmihalcea</groupId>
+			<artifactId>hibernate-types-60</artifactId> <!-- ou hibernate-types-52 dependendo da versão -->
+			<version>2.21.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

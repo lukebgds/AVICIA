@@ -18,11 +18,13 @@ public class ProfissionalSaudeMapper {
         dto.setCargo(profissional.getCargo());
         dto.setUnidade(profissional.getUnidade());
 
+        /* 
         Usuario usuario = profissional.getUsuario();
         if (usuario != null) {
             UsuarioDTO usuarioDTO = UsuarioMapper.toDTO(usuario);
             dto.setUsuario(usuarioDTO);
         }
+        */
 
         return dto;
     }
@@ -38,11 +40,13 @@ public class ProfissionalSaudeMapper {
         profissional.setCargo(dto.getCargo());
         profissional.setUnidade(dto.getUnidade());
 
+        /* 
         UsuarioDTO usuarioDTO = dto.getUsuario();
         if (usuarioDTO != null) {
             Usuario usuario = UsuarioMapper.toEntity(usuarioDTO);
             profissional.setUsuario(usuario);
         }
+        */
 
         return profissional;
     }

@@ -1,23 +1,21 @@
-package com.avicia.api.data.dto.object;
+package com.avicia.api.data.dto.response;
 
 import java.time.LocalDate;
 
 import com.avicia.api.data.enumerate.PreferenciaContato;
-import com.avicia.api.data.enumerate.Sexo;
 
 import lombok.Data;
 
 @Data
-public class PacienteDTO {
+public class PacienteResponse {
 
     private Integer idPaciente;
-    private UsuarioDTO usuario;
+    private UsuarioResponse usuario;
     private LocalDate dataNascimento;
-    private Sexo sexo;
+    private String sexo;
     private String estadoCivil;
     private String profissao;
     private String endereco;
-    private String telefone;
-    private PreferenciaContato preferenciaContato;
+    private String preferenciaContato;
 
 }
