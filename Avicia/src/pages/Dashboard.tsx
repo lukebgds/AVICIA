@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 const Dashboard = () => {
-  const [userType] = useState("medico"); 
+  const [userType] = useState("medico"); // Em um app real, isso viria do contexto de auth
 
   const stats = [
     {

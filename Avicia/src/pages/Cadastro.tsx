@@ -1,3 +1,4 @@
+// Pagina Cadastro version final 2
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,18 +8,107 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Lock, Stethoscope, Phone, Calendar, MapPin, Briefcase, Building, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 const Cadastro = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    cpf: '',
+    telefone: '',
+    endereco: '',
+    dataNascimento: '',
+    sexo: '',
+    estadoCivil: '',
+    profissao: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Cadastro realizado com sucesso!",
-      description: "Sua conta foi criada no AVICIA",
-    });
-    navigate("/login");
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('📋 Dados do form:', formData);
+      
+      const role = await api.getRoleByName('PACIENTE');
+      const idRole = role.idRole;
+      console.log('🔍 Role PACIENTE encontrada:', { idRole });
+
+      const nomeCompleto = formData.name.trim();
+      const ultimoEspaco = nomeCompleto.lastIndexOf(' ');
+      const nome = ultimoEspaco > 0 ? nomeCompleto.substring(0, ultimoEspaco) : nomeCompleto;
+      const sobrenome = ultimoEspaco > 0 ? nomeCompleto.substring(ultimoEspaco + 1) : '';
+
+      const usuarioData = {
+        nome,
+        sobrenome,
+        cpf: formData.cpf.replace(/\D/g, ''),
+        email: formData.email,
+        senha: formData.password,
+        telefone: formData.telefone,
+        ativo: true,
+        mfaHabilitado: false,
+        dataCriacao: new Date().toISOString().split('T')[0],
+        idRole: idRole
+      };
+      
+      const usuarioCriado = await api.criarUsuario(usuarioData);
+      const idUsuario = usuarioCriado.idUsuario;
+      console.log('👤 Usuário criado:', { idUsuario });
+
+      const pacienteData = {
+        idUsuario: idUsuario,
+        dataNascimento: formData.dataNascimento,
+        sexo: formData.sexo === 'M' ? 'MASCULINO' : formData.sexo === 'F' ? 'FEMININO' : 'OUTRO',
+        estadoCivil: formData.estadoCivil,
+        profissao: formData.profissao,
+        endereco: formData.endereco,
+        preferenciaContato: 'EMAIL'
+      };
+      
+      const pacienteCriado = await api.criarPaciente(pacienteData);
+      console.log('🏥 Paciente criado:', { idPaciente: pacienteCriado.idPaciente });
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: `Bem-vindo, ${usuarioCriado.nome}! Seu ID é ${pacienteCriado.idPaciente}`,
+      });
+      navigate("/login");
+      
+    } catch (error: any) {
+      console.error('❌ Erro detalhado:', error);
+      toast({
+        title: "Erro no cadastro",
+        description: error.message || "Tente novamente mais tarde",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,10 +153,11 @@ const Cadastro = () => {
                     placeholder="Seu nome completo"
                     className="pl-10"
                     required
+                    value={formData.name}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
-
 
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
@@ -78,6 +169,8 @@ const Cadastro = () => {
                     placeholder="seu@email.com"
                     className="pl-10"
                     required
+                    value={formData.email}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
@@ -93,6 +186,8 @@ const Cadastro = () => {
                       placeholder="Sua senha"
                       className="pl-10"
                       required
+                      value={formData.password}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -107,14 +202,14 @@ const Cadastro = () => {
                       placeholder="Confirme sua senha"
                       className="pl-10"
                       required
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Campos para paciente */}
               <div className="space-y-4 pt-4 border-t border-border">
-                {/* Campos comuns para todos os tipos */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
@@ -122,6 +217,8 @@ const Cadastro = () => {
                       id="cpf"
                       placeholder="000.000.000-00"
                       required
+                      value={formData.cpf}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div className="space-y-2">
@@ -133,6 +230,8 @@ const Cadastro = () => {
                         placeholder="(00) 00000-0000"
                         className="pl-10"
                         required
+                        value={formData.telefone}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -147,6 +246,8 @@ const Cadastro = () => {
                       placeholder="Seu endereço completo"
                       className="pl-10"
                       required
+                      value={formData.endereco}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -161,12 +262,18 @@ const Cadastro = () => {
                         type="date"
                         className="pl-10"
                         required
+                        value={formData.dataNascimento}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="sexo">Sexo</Label>
-                    <Select required>
+                    <Select 
+                      value={formData.sexo}
+                      onValueChange={(value) => handleSelectChange('sexo', value)}
+                      required
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
@@ -182,7 +289,11 @@ const Cadastro = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="estadoCivil">Estado Civil</Label>
-                    <Select required>
+                    <Select 
+                      value={formData.estadoCivil}
+                      onValueChange={(value) => handleSelectChange('estadoCivil', value)}
+                      required
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
@@ -203,6 +314,8 @@ const Cadastro = () => {
                         placeholder="Sua profissão"
                         className="pl-10"
                         required
+                        value={formData.profissao}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -211,9 +324,10 @@ const Cadastro = () => {
 
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-primary to-info hover:from-primary/90 hover:to-info/90 transition-all duration-300"
               >
-                Criar Conta
+                {loading ? "Criando..." : "Criar Conta"} 
               </Button>
             </form>
           </CardContent>

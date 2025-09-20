@@ -1,13 +1,10 @@
 package com.avicia.api.controller;
 
-import java.time.Instant;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:8080")
 @RequiredArgsConstructor
 public class LoginController {
 
@@ -38,7 +36,7 @@ public class LoginController {
 
     private final TokenService tokenService;
 
-    @PostMapping("/login")
+    @PostMapping("/login") // localhost:9081/api/login
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
 
         var usuraio = usuarioRepository.findByCpf(loginRequest.cpf());
@@ -53,7 +51,7 @@ public class LoginController {
         return ResponseEntity.ok(new LoginResponse(jwtValue, expiresIn));
     }
 
-    @PostMapping("/admin/login")
+    @PostMapping("/admin/login") // localhost:9081/api/admin/login
     public ResponseEntity<LoginResponse> loginAdmin(@RequestBody LoginAdminRequest loginAdminRequest) {
         
         var usuraio = usuarioRepository.findByNome(loginAdminRequest.nome());

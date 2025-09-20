@@ -6,7 +6,10 @@ import com.avicia.api.data.enumerate.PreferenciaContato;
 import com.avicia.api.data.enumerate.Sexo;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -16,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(schema = "seguranca", name = "usuario_paciente")
+@Table(schema = "cadastro", name = "usuario_paciente")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,7 +37,7 @@ public class Paciente {
     private LocalDate dataNascimento;
 
     @Column(name = "sexo")
-    private Sexo sexo;
+    private String sexo;
 
     @Column(name = "estado_civil")
     private String estadoCivil;
@@ -45,10 +48,10 @@ public class Paciente {
     @Column(name = "endereco")
     private String endereco;
 
-    @Column(name = "telefone")
-    private String telefone;
+    @Column(name = "preferencia_contato")
+    private String preferenciaContato;
 
-    @Column(name = "preferenciaContato")
-    private  PreferenciaContato preferenciaContato;
+    
+
 
 }

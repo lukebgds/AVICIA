@@ -4,7 +4,7 @@ public enum PreferenciaContato {
 
     TELEFONE("telefone"),
     EMAIL("email"),
-    OUTRO("outro");
+    SMS("sms");
 
     private String preferenciaContato;
 

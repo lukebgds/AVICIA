@@ -1,25 +1,49 @@
+// login version final
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Lock, Mail, Stethoscope } from "lucide-react";
+import { UserPlus, Lock, User, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 const Login = () => {
-  const [userType, setUserType] = useState("");
+  const [loginData, setLoginData] = useState({ cpf: '', senha: '' });
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setLoginData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Login realizado com sucesso!",
-      description: "Bem-vindo ao AVICIA",
-    });
-    navigate("/dashboard");
+    setLoading(true);
+    
+    try {
+      await api.loginPaciente({ 
+        cpf: loginData.cpf, 
+        senha: loginData.senha 
+      });
+      
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo ao AVICIA",
+      });
+      navigate("/paciente/home");
+    } catch (error: any) {
+      toast({
+        title: "Erro no login",
+        description: error.message || "CPF ou senha incorretos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,52 +72,43 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="userType">Tipo de Usuário</Label>
-                <Select value={userType} onValueChange={setUserType} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de usuário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="medico">Profissional de Saúde</SelectItem>
-                    <SelectItem value="gestao">Funcionário</SelectItem>
-                    <SelectItem value="paciente">Paciente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="cpf">CPF</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
+                    id="cpf"
+                    type="text"
+                    placeholder="000.000.000-00"
                     className="pl-10"
                     required
+                    value={loginData.cpf}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="senha">Senha</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="password"
+                    id="senha"
                     type="password"
                     placeholder="Sua senha"
                     className="pl-10"
                     required
+                    value={loginData.senha}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
 
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-primary to-info hover:from-primary/90 hover:to-info/90 transition-all duration-300"
               >
-                Entrar
+                {loading ? "Entrando..." : "Entrar"} 
               </Button>
             </form>
 

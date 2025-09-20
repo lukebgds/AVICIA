@@ -3,6 +3,7 @@ package com.avicia.api.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,10 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.object.RoleDTO;
 import com.avicia.api.service.RoleService;
+
 import lombok.RequiredArgsConstructor;
+
 
 @RestController
 @RequestMapping("/api/roles")
+@CrossOrigin(origins = "http://localhost:8080")
 @RequiredArgsConstructor
 public class RoleController {
 

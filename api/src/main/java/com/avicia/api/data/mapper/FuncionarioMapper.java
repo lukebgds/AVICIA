@@ -17,11 +17,13 @@ public class FuncionarioMapper {
         dto.setMatricula(funcionario.getMatricula());
         dto.setObservacoes(funcionario.getObservacoes());
 
+        /* 
         Usuario usuario = funcionario.getUsuario();
         if (usuario != null) {
             UsuarioDTO usuarioDTO = UsuarioMapper.toDTO(usuario);
             dto.setUsuario(usuarioDTO);
         }
+        */
 
         return dto;
     }
@@ -36,11 +38,13 @@ public class FuncionarioMapper {
         funcionario.setMatricula(dto.getMatricula());
         funcionario.setObservacoes(dto.getObservacoes());
 
+        /* 
         UsuarioDTO usuarioDTO = dto.getUsuario();
         if (usuarioDTO != null) {
             Usuario usuario = UsuarioMapper.toEntity(usuarioDTO);
             funcionario.setUsuario(usuario);
         }
+        */
 
         return funcionario;
     }
