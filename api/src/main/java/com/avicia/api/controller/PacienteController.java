@@ -41,7 +41,7 @@ public class PacienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping // localhost:9081/api/pacientes
+    @PostMapping("/cadastro") // localhost:9081/api/pacientes
     public PacienteResponse criar(@RequestBody PacienteRequest dto) {
         return pacienteService.criar(dto);
     }

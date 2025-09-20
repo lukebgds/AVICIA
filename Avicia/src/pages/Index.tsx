@@ -184,7 +184,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-primary to-info hover:from-primary/90 hover:to-info/90 transition-all duration-300 text-lg px-8 py-4"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/cadastro")}
             >
               Criar Conta Grátis
               <ArrowRight className="ml-2 h-5 w-5" />

@@ -32,15 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
-### ENVIRONMENT ###
-.env
-
 ### DATA BASE ###
 
 src/main/resources/database/
 
-### SSH ###
-
-src/main/resources/keys/
 
 

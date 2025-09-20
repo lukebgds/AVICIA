@@ -16,7 +16,7 @@ export const api = {
 
   criarUsuario: async (dados: any) => {
     console.log('👤 Criando usuário:', dados);
-    const response = await fetch(`${BASE_URL}/usuarios`, {
+    const response = await fetch(`${BASE_URL}/usuarios/cadastro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
@@ -32,7 +32,7 @@ export const api = {
 
   criarPaciente: async (dados: any) => {
     console.log('🏥 Criando paciente:', dados);
-    const response = await fetch(`${BASE_URL}/pacientes`, {
+    const response = await fetch(`${BASE_URL}/pacientes/cadastro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
@@ -53,6 +53,8 @@ export const api = {
       body: JSON.stringify(dados)
     });
     if (!response.ok) throw new Error('CPF ou senha incorretos');
+    //const TokenSessao = await response.json();
+    //console.log(TokenSessao)
     return response.json();
   },
 

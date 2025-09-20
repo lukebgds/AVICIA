@@ -38,10 +38,14 @@ public class SecurityConfiguration {
 
         httpSecurity
             .authorizeHttpRequests(authorize -> authorize
-                                                            
+                                                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
+                                                            .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                                                            .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
+                                                            .requestMatchers(HttpMethod.POST, "/api/pacientes/cadastro").permitAll()
+                                                            .requestMatchers(HttpMethod.GET, "/api/roles/{nome}").permitAll()
                                                             .requestMatchers(HttpMethod.GET, "/api/teste-jwt").permitAll()
-                                                            .anyRequest().permitAll()
+                                                            .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -13,4 +13,5 @@ cd docker
 REM Executa o docker
 docker-compose up -d
 
+pause
 

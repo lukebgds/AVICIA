@@ -75,7 +75,6 @@ CREATE TABLE cadastro.usuario_profissional_saude (
   especialidade varchar NOT NULL,
   cargo varchar NOT NULL,
   unidade varchar NOT NULL,
-  ativo boolean NOT NULL
 );
 
 CREATE TABLE cadastro.usuario_funcionario (
@@ -85,7 +84,6 @@ CREATE TABLE cadastro.usuario_funcionario (
   setor varchar NOT NULL,
   matricula varchar UNIQUE NOT NULL,
   observacoes text,
-  ativo boolean NOT NULL
 );
 
 CREATE TABLE cadastro.paciente_convenio (
@@ -232,3 +230,5 @@ CREATE TABLE administrativo.agenda (
   data_horario timestamp NOT NULL,
   status tipo_status_agenda NOT NULL
 );
+
+
