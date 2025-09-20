@@ -1,17 +1,7 @@
-@echo off
-echo Instalando dependencias do projeto...
+@echo off 
+echo Instalando dependencias do projeto... 
 
-REM Vai para a pasta Avicia
-cd avicia
+start cmd /k "cd avicia && npm install" 
 
-REM Executa o npm install
-npm install
-
-REM Vai para a pasta docker
-cd docker
-
-REM Executa o docker
-docker-compose up -d
-
-pause
+start cmd /k "cd docker && docker-compose up -d"
 

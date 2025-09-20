@@ -53,8 +53,6 @@ export const api = {
       body: JSON.stringify(dados)
     });
     if (!response.ok) throw new Error('CPF ou senha incorretos');
-    //const TokenSessao = await response.json();
-    //console.log(TokenSessao)
     return response.json();
   },
 
