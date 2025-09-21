@@ -6,7 +6,7 @@ Antes de executar o projeto, certifique-se de ter instalado em sua máquina:
 
 - **Java 21**
 - **Node.js**
-- **Docker** e **Docker Compose**
+- **Docker Desktop** e **Docker Compose**
 - **Maven**
 
 ---
