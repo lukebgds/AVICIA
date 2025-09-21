@@ -230,5 +230,3 @@ CREATE TABLE administrativo.agenda (
   data_horario timestamp NOT NULL,
   status tipo_status_agenda NOT NULL
 );
-
-
