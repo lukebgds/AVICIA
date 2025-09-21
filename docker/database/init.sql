@@ -15,9 +15,9 @@ CREATE TYPE tipo_gravidade AS ENUM ('leve','moderada','grave');
 CREATE TYPE tipo_diagnostico AS ENUM ('principal','secundario');
 CREATE TYPE tipo_status_diagnostico AS ENUM ('ativo','curado','inativo');
 CREATE TYPE tipo_consulta AS ENUM ('presencial','teleconsulta');
-CREATE TYPE tipo_status_consulta AS ENUM ('agendada','realizada','cancelada','não compareceu');
+CREATE TYPE tipo_status_consulta AS ENUM ('agendada','realizada','cancelada','nao_compareceu');
 CREATE TYPE tipo_status_prescricao AS ENUM ('ativa','suspensa','concluida');
-CREATE TYPE tipo_status_agenda AS ENUM ('livre','agendado','concluído','cancelado','bloqueado','expirado');
+CREATE TYPE tipo_status_agenda AS ENUM ('livre','agendado','concluido','cancelado','bloqueado','expirado');
 
 -- ================================
 -- ====== TABELAS SEGURANCA =======
