@@ -39,4 +39,4 @@ mvn spring-boot:run
 
 # 4. Iniciar o frontend em modo de desenvolvimento
 cd ../avicia
-npm run devv
+npm run dev
