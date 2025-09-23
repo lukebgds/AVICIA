@@ -1,4 +1,3 @@
-// login version final
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,30 +9,39 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 
 const Login = () => {
-  const [loginData, setLoginData] = useState({ cpf: '', senha: '' });
+  const [loginData, setLoginData] = useState({ cpf: "", senha: "" });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setLoginData(prev => ({ ...prev, [id]: value }));
+    setLoginData((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      await api.loginPaciente({ 
-        cpf: loginData.cpf, 
-        senha: loginData.senha 
+      const resultado = await api.loginPaciente({
+        cpf: loginData.cpf,
+        senha: loginData.senha,
       });
-      
+
+      localStorage.setItem("token", resultado.accessToken);
+      localStorage.setItem("expiresIn", resultado.expiresIn.toString());
+
+      console.log(
+        "🔐 Token salvo no localStorage:",
+        resultado.accessToken.substring(0, 20) + "..."
+      );
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao AVICIA",
       });
+
       navigate("/paciente/home");
     } catch (error: any) {
       toast({
@@ -65,9 +73,7 @@ const Login = () => {
 
         <Card className="shadow-[var(--medical-glow)] border-medical-secondary/30">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary">
-              Entrar
-            </CardTitle>
+            <CardTitle className="text-2xl text-primary">Entrar</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,12 +109,12 @@ const Login = () => {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-primary to-info hover:from-primary/90 hover:to-info/90 transition-all duration-300"
               >
-                {loading ? "Entrando..." : "Entrar"} 
+                {loading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
 
