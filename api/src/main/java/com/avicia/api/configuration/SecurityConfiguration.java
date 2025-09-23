@@ -48,7 +48,7 @@ public class SecurityConfiguration {
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
 
                                                             .requestMatchers(HttpMethod.GET, "/api/teste-jwt").permitAll()
-                                                            .anyRequest().authenticated()
+                                                            .anyRequest().permitAll()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
