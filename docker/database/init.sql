@@ -37,7 +37,7 @@ CREATE TABLE seguranca.usuario (
   cpf varchar UNIQUE NOT NULL,
   email varchar UNIQUE NOT NULL,
   telefone varchar UNIQUE NOT NULL,
-  senha_hash varchar UNIQUE NOT NULL,
+  senha_hash varchar NOT NULL,
   data_criacao date NOT NULL,
   mfa_habilitado boolean NOT NULL,
   ativo boolean NOT NULL
@@ -71,7 +71,7 @@ CREATE TABLE cadastro.usuario_profissional_saude (
   id_usuario int NOT NULL REFERENCES seguranca.usuario(id_usuario),
   matricula varchar UNIQUE NOT NULL,
   conselho varchar NOT NULL,
-  registro_conselho varchar NOT NULL,
+  registro_conselho varchar UNIQUE NOT NULL,
   especialidade varchar NOT NULL,
   cargo varchar NOT NULL,
   unidade varchar NOT NULL
