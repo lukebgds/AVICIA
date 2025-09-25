@@ -36,5 +36,8 @@ build/
 
 src/main/resources/database/
 
+### RSA KEYS ###
+
+src/main/resources/keys
 
 
