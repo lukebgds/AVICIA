@@ -18,8 +18,8 @@ import lombok.Setter;
 public class Funcionario {
 
     @Id
-    @Column(name = "id_administrativo")
-    private Integer idAdministrativo;
+    @Column(name = "id_funcionario")
+    private Integer idFuncionario;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)

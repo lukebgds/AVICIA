@@ -18,5 +18,8 @@ public interface ProfissionalSaudeRepository extends JpaRepository<ProfissionalS
 
     // Buscar Profissional de saúde pelo ID do usuário
     Optional<ProfissionalSaude> findByUsuario_IdUsuario(Integer idUsuario);
+	
+	// Buscar Profissional de saúde pelo ID do profissional de saúde;
+	Optional<ProfissionalSaude> findByIdProfissional(Integer idProfissional);
 
 }

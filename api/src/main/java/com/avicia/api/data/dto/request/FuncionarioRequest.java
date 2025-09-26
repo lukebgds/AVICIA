@@ -1,12 +1,11 @@
-package com.avicia.api.data.dto.object;
+package com.avicia.api.data.dto.request;
 
 import lombok.Data;
 
 @Data
-public class FuncionarioDTO {
+public class FuncionarioRequest {
 
-    private Integer idAdministrativo;
-    private UsuarioDTO usuario;
+    private Integer idUsuario;
     private String cargo;
     private String setor;
     private String matricula;

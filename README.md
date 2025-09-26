@@ -8,8 +8,31 @@ Antes de executar o projeto, certifique-se de ter instalado em sua máquina:
 - **Node.js**
 - **Docker Desktop** e **Docker Compose**
 - **Maven**
+- **OpenSSL**
 
 ---
+
+## 🔑 Gerando chaves RSA (necessário para o backend)
+
+O backend utiliza autenticação baseada em **JWT**, que depende de chaves RSA.  
+As chaves **não são versionadas** no repositório por questões de segurança, então você precisará gerá-las manualmente.
+
+### Passo a passo (Windows)
+
+1. Abra o **Prompt de Comando (cmd)** na pasta raiz do projeto `AVICIA`.  
+2. Execute os seguintes comandos:
+
+```bash
+# 1. Criar a pasta onde as chaves ficarão armazenadas
+mkdir api\src\main\resources\keys
+
+# 2. Gerar a chave privada (private_key.pem)
+openssl genpkey -algorithm RSA -out api\src\main\resources\keys\private_key.pem -pkeyopt rsa_keygen_bits:2048
+
+# 3. Gerar a chave pública (public_key.pem) a partir da chave privada
+openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out AVICIA\api\src\main\resources\keys\public_key.pem
+
+```
 
 ## 🚀 Guia de execução
 
@@ -40,3 +63,5 @@ mvn spring-boot:run
 # 4. Iniciar o frontend em modo de desenvolvimento
 cd ../avicia
 npm run dev
+
+

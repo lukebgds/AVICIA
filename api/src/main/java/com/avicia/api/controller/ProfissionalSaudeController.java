@@ -2,8 +2,8 @@ package com.avicia.api.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,39 +13,40 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.object.ProfissionalSaudeDTO;
+import com.avicia.api.data.dto.request.ProfissionalSaudeRequest;
+import com.avicia.api.data.dto.response.ProfissionalSaudeResponse;
 import com.avicia.api.service.ProfissionalSaudeService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/profissionais-saude")
-@CrossOrigin(origins = "http://localhost:8080")
 @RequiredArgsConstructor
 public class ProfissionalSaudeController {
 
+	@Autowired
     private final ProfissionalSaudeService profissionalService;
 
     @PostMapping // localhost:9081/api/profissionais-saude
-    public ResponseEntity<ProfissionalSaudeDTO> criar(@RequestBody ProfissionalSaudeDTO dto) {
+    public ResponseEntity<ProfissionalSaudeResponse> criar(@RequestBody ProfissionalSaudeRequest dto) {
         return ResponseEntity.ok(profissionalService.criar(dto));
     }
 
     @GetMapping // localhost:9081/api/profissionais-saude
-    public ResponseEntity<List<ProfissionalSaudeDTO>> listarTodos() {
+    public ResponseEntity<List<ProfissionalSaudeResponse>> listarTodos() {
         return ResponseEntity.ok(profissionalService.listarTodos());
     }
 
     @GetMapping("/{idProfissional}") // localhost:9081/api/profissionais-saude/{idProfissional}
-    public ResponseEntity<ProfissionalSaudeDTO> buscarPorId(@PathVariable Integer idProfissional) {
+    public ResponseEntity<ProfissionalSaudeResponse> buscarPorIdProfissional(@PathVariable Integer idProfissional) {
 
-        return profissionalService.buscarPorId(idProfissional)
+        return profissionalService.buscarPorIdProfissional(idProfissional)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/matricula/{matricula}")
-    public ResponseEntity<ProfissionalSaudeDTO> buscarPorMatricula(@PathVariable String matricula) {
+    public ResponseEntity<ProfissionalSaudeResponse> buscarPorMatricula(@PathVariable String matricula) {
 
         return profissionalService.buscarPorMatricula(matricula)
                 .map(ResponseEntity::ok)
@@ -53,7 +54,7 @@ public class ProfissionalSaudeController {
     }
 
     @GetMapping("/registro/{registroConselho}")
-    public ResponseEntity<ProfissionalSaudeDTO> buscarPorRegistroConselho(@PathVariable String registroConselho) {
+    public ResponseEntity<ProfissionalSaudeResponse> buscarPorRegistroConselho(@PathVariable String registroConselho) {
 
         return profissionalService.buscarPorRegistroConselho(registroConselho)
                 .map(ResponseEntity::ok)
@@ -61,7 +62,7 @@ public class ProfissionalSaudeController {
     }
 
     @PutMapping("/{matricula}")
-    public ResponseEntity<ProfissionalSaudeDTO> atualizar(@PathVariable String matricula, @RequestBody ProfissionalSaudeDTO dto) {
+    public ResponseEntity<ProfissionalSaudeResponse> atualizar(@PathVariable String matricula, @RequestBody ProfissionalSaudeRequest dto) {
 
         return profissionalService.atualizar(matricula, dto)
                 .map(ResponseEntity::ok)

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,6 +26,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
     @Value("${jwt.public.key}")
@@ -38,18 +40,25 @@ public class SecurityConfiguration {
 
         httpSecurity
             .authorizeHttpRequests(authorize -> authorize
-                                                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                                            
+                                                            // Cadastro e login de paciêntes
                                                             .requestMatchers(HttpMethod.GET, "/api/roles/{nome}").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/pacientes/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
 
+                                                            // Login Admin
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
 
+                                                            // TESTE: apenas quem tem LOGS_READ pode acessar GET /api/logs
+                                                            // .requestMatchers(HttpMethod.GET, "/api/logs").hasAuthority("LOGS_READ")
+                                                            // .requestMatchers(HttpMethod.POST, "/api/logs").hasAuthority("LOGS_WRITE")
+
+                                                            // Teste do Token
                                                             .requestMatchers(HttpMethod.GET, "/api/teste-jwt").permitAll()
-                                                            .anyRequest().permitAll()
+
+                                                            .anyRequest().authenticated()
             )
+            .cors(Customizer.withDefaults())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(csrf -> csrf.disable());
