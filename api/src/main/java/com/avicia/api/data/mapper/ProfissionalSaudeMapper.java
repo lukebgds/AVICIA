@@ -1,56 +1,38 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.object.ProfissionalSaudeDTO;
-import com.avicia.api.data.dto.object.UsuarioDTO;
+import com.avicia.api.data.dto.request.ProfissionalSaudeRequest;
+import com.avicia.api.data.dto.response.ProfissionalSaudeResponse;
 import com.avicia.api.model.ProfissionalSaude;
-import com.avicia.api.model.Usuario;
 
 public class ProfissionalSaudeMapper {
 
-    public static ProfissionalSaudeDTO toDTO(ProfissionalSaude profissional) {
+	public static ProfissionalSaude toEntity (ProfissionalSaudeRequest dto) {
+	
+		ProfissionalSaude profissionalSaude = new ProfissionalSaude();
+		
+		// Talvez isso seja setado internamente
+		profissionalSaude.setMatricula(dto.getMatricula());
+		profissionalSaude.setRegistroConselho(dto.getRegistroConselho());
+		profissionalSaude.setEspecialidade(dto.getEspecialidade());
+		profissionalSaude.setCargo(dto.getCargo());
+		profissionalSaude.setUnidade(dto.getUnidade());
 
-        ProfissionalSaudeDTO dto = new ProfissionalSaudeDTO();
-
-        dto.setIdProfissional(profissional.getIdProfissional());
-        dto.setMatricula(profissional.getMatricula());
-        dto.setRegistroConselho(profissional.getRegistroConselho());
-        dto.setEspecialidade(profissional.getEspecialidade());
-        dto.setCargo(profissional.getCargo());
-        dto.setUnidade(profissional.getUnidade());
-
-        /* 
-        Usuario usuario = profissional.getUsuario();
-        if (usuario != null) {
-            UsuarioDTO usuarioDTO = UsuarioMapper.toDTO(usuario);
-            dto.setUsuario(usuarioDTO);
-        }
-        */
-
-        return dto;
-    }
-
-    public static ProfissionalSaude toEntity(ProfissionalSaudeDTO dto) {
-
-        ProfissionalSaude profissional = new ProfissionalSaude();
-
-        profissional.setIdProfissional(dto.getIdProfissional());
-        profissional.setMatricula(dto.getMatricula());
-        profissional.setRegistroConselho(dto.getRegistroConselho());
-        profissional.setEspecialidade(dto.getEspecialidade());
-        profissional.setCargo(dto.getCargo());
-        profissional.setUnidade(dto.getUnidade());
-
-        /* 
-        UsuarioDTO usuarioDTO = dto.getUsuario();
-        if (usuarioDTO != null) {
-            Usuario usuario = UsuarioMapper.toEntity(usuarioDTO);
-            profissional.setUsuario(usuario);
-        }
-        */
-
-        return profissional;
-    }
-
-    
+		return profissionalSaude;
+	}
+	
+	public static ProfissionalSaudeResponse toResponseDTO (ProfissionalSaude profissionalSaude) {
+	
+		ProfissionalSaudeResponse dto = new ProfissionalSaudeResponse();
+		
+		dto.setIdProfissional(profissionalSaude.getIdProfissional());
+		dto.setUsuario(UsuarioMapper.toResponseDTO(profissionalSaude.getUsuario()));
+		dto.setMatricula(profissionalSaude.getMatricula());
+		dto.setRegistroConselho(profissionalSaude.getRegistroConselho());
+		dto.setEspecialidade(profissionalSaude.getEspecialidade());
+		dto.setCargo(profissionalSaude.getCargo());
+		dto.setUnidade(profissionalSaude.getUnidade());
+		
+		return dto;
+	}
 
 }

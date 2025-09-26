@@ -22,6 +22,7 @@ public class FuncionarioMapper {
     public static FuncionarioResponse toResponseDTO(Funcionario funcionario) {
 
         FuncionarioResponse dto = new FuncionarioResponse();
+        
         dto.setIdFuncionario(funcionario.getIdFuncionario());
         dto.setUsuario(UsuarioMapper.toResponseDTO(funcionario.getUsuario()));
         dto.setCargo(funcionario.getCargo());

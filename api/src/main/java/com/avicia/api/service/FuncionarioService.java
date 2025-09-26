@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.object.FuncionarioDTO;
 import com.avicia.api.data.dto.request.FuncionarioRequest;
 import com.avicia.api.data.dto.response.FuncionarioResponse;
 import com.avicia.api.data.mapper.FuncionarioMapper;
@@ -41,7 +40,7 @@ public class FuncionarioService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         funcionario.setUsuario(usuario);
 
-        // Geração do ID do paciente:
+        // Geração do ID do Funcionario:
         String idUsuarioStr = String.valueOf(usuario.getIdUsuario());
 
         // Pega os 3 primeiros dígitos
@@ -58,8 +57,10 @@ public class FuncionarioService {
             numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
             idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
         }
-
+		
+		funcionario.setIdFuncionario(idFuncionario);
         Funcionario salvo = funcionarioRepository.save(funcionario);
+		
         return FuncionarioMapper.toResponseDTO(salvo);
     }
 
