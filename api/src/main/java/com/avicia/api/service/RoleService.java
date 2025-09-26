@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.avicia.api.data.dto.object.RoleDTO;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoleService {
 
+    @Autowired
     private final RoleRepository roleRepository;
     
     public RoleDTO criar(RoleDTO dto) {

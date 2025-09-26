@@ -2,11 +2,15 @@ package com.avicia.api.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.avicia.api.data.dto.object.FuncionarioDTO;
+import com.avicia.api.data.dto.request.FuncionarioRequest;
+import com.avicia.api.data.dto.response.FuncionarioResponse;
 import com.avicia.api.data.mapper.FuncionarioMapper;
 import com.avicia.api.model.Funcionario;
 import com.avicia.api.model.Usuario;
@@ -19,45 +23,67 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FuncionarioService {
 
+    @Autowired
     private final FuncionarioRepository funcionarioRepository;
 
+    @Autowired
     private final UsuarioRepository usuarioRepository;
 
-    public FuncionarioDTO criar(FuncionarioDTO dto) {
+    @Autowired
+    private final Random random = new Random();
+
+    public FuncionarioResponse criar(FuncionarioRequest dto) {
 
         Funcionario funcionario = FuncionarioMapper.toEntity(dto);
 
-        // Garante que o usuário existe antes de salvar
-        Usuario usuario = usuarioRepository.findById(dto.getUsuario().getIdUsuario())
+        // Recupera o usuário
+        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         funcionario.setUsuario(usuario);
 
-        Funcionario salvo = funcionarioRepository.save(funcionario);
+        // Geração do ID do paciente:
+        String idUsuarioStr = String.valueOf(usuario.getIdUsuario());
 
-        return FuncionarioMapper.toDTO(salvo);
+        // Pega os 3 primeiros dígitos
+        String prefixo = idUsuarioStr.substring(0, 3);
+
+        // Número aleatório de 3 dígitos
+        String numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+
+        // Concatena e converte para Integer
+        Integer idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
+
+        // Garante unicidade
+        while (funcionarioRepository.existsById(idFuncionario)) {
+            numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+            idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
+        }
+
+        Funcionario salvo = funcionarioRepository.save(funcionario);
+        return FuncionarioMapper.toResponseDTO(salvo);
     }
 
-    public List<FuncionarioDTO> listarTodos() {
+    public List<FuncionarioResponse> listarTodos() {
 
         return funcionarioRepository.findAll()
                 .stream()
-                .map(FuncionarioMapper::toDTO)
+                .map(FuncionarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<FuncionarioDTO> buscarPorId(Integer idAdministrativo) {
+    public Optional<FuncionarioResponse> buscarPorId(Integer idFuncionario) {
 
-        return funcionarioRepository.findById(idAdministrativo)
-                .map(FuncionarioMapper::toDTO);
+        return funcionarioRepository.findById(idFuncionario)
+                .map(FuncionarioMapper::toResponseDTO);
     }
 
-    public Optional<FuncionarioDTO> buscarPorMatricula(String matricula) {
+    public Optional<FuncionarioResponse> buscarPorMatricula(String matricula) {
 
         return funcionarioRepository.findByMatricula(matricula)
-                .map(FuncionarioMapper::toDTO);
+                .map(FuncionarioMapper::toResponseDTO);
     }
 
-    public Optional<FuncionarioDTO> atualizar(String matricula, FuncionarioDTO dto) {
+    public Optional<FuncionarioResponse> atualizar(String matricula, FuncionarioRequest dto) {
 
         return funcionarioRepository.findByMatricula(matricula).map(funcionario -> {
             funcionario.setCargo(dto.getCargo());
@@ -66,14 +92,13 @@ public class FuncionarioService {
             funcionario.setObservacoes(dto.getObservacoes());
 
             // Atualiza o usuário vinculado
-            Usuario usuario = usuarioRepository.findById(dto.getUsuario().getIdUsuario())
+            Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             funcionario.setUsuario(usuario);
 
             Funcionario atualizado = funcionarioRepository.save(funcionario);
-
-            return FuncionarioMapper.toDTO(atualizado);
-        });        
+            return FuncionarioMapper.toResponseDTO(atualizado);
+        });
     }
 
     public boolean deletar(String matricula) {

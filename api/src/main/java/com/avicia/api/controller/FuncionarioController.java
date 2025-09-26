@@ -2,8 +2,8 @@ package com.avicia.api.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,39 +13,32 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.object.FuncionarioDTO;
+import com.avicia.api.data.dto.request.FuncionarioRequest;
+import com.avicia.api.data.dto.response.FuncionarioResponse;
 import com.avicia.api.service.FuncionarioService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/funcionarios")
-@CrossOrigin(origins = "http://localhost:8080")
 @RequiredArgsConstructor
 public class FuncionarioController {
 
+    @Autowired
     private final FuncionarioService funcionarioService;
 
     @PostMapping // localhost:9081/api/funcionarios
-    public ResponseEntity<FuncionarioDTO> criar(@RequestBody FuncionarioDTO dto) {
+    public ResponseEntity<FuncionarioResponse> criar(@RequestBody FuncionarioRequest dto) {
         return ResponseEntity.ok(funcionarioService.criar(dto));
     }
 
     @GetMapping // localhost:9081/api/funcionarios
-    public ResponseEntity<List<FuncionarioDTO>> listarTodos() {
+    public ResponseEntity<List<FuncionarioResponse>> listarTodos() {
         return ResponseEntity.ok(funcionarioService.listarTodos());
     }
 
-    @GetMapping("/id/{idAdministrativo}") // localhost:9081/api/funcionarios/{idAdministrativo}
-    public ResponseEntity<FuncionarioDTO> buscarPorId(@PathVariable Integer idAdministrativo) {
-        
-        return funcionarioService.buscarPorId(idAdministrativo)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @GetMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
-    public ResponseEntity<FuncionarioDTO> buscarPorMatricula(@PathVariable String matricula) {
+    public ResponseEntity<FuncionarioResponse> buscarPorMatricula(@PathVariable String matricula) {
 
         return funcionarioService.buscarPorMatricula(matricula)
                 .map(ResponseEntity::ok)
@@ -53,7 +46,7 @@ public class FuncionarioController {
     }
 
     @PutMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
-    public ResponseEntity<FuncionarioDTO> atualizar(@PathVariable String matricula, @RequestBody FuncionarioDTO dto) {
+    public ResponseEntity<FuncionarioResponse> atualizar(@PathVariable String matricula, @RequestBody FuncionarioRequest dto) {
 
         return funcionarioService.atualizar(matricula, dto)
                 .map(ResponseEntity::ok)
@@ -63,10 +56,9 @@ public class FuncionarioController {
     @DeleteMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
     public ResponseEntity<Void> deletar(@PathVariable String matricula) {
 
-        boolean deletado = funcionarioService.deletar(matricula);
-        
-        return deletado ? ResponseEntity.noContent().build()
-                        : ResponseEntity.notFound().build();
+        return funcionarioService.deletar(matricula)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
 }
