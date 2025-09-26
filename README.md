@@ -23,13 +23,13 @@ As chaves **não são versionadas** no repositório por questões de segurança,
 
 ```bash
 # 1. Criar a pasta onde as chaves ficarão armazenadas
-mkdir AVICIA\api\src\main\resources\keys
+mkdir api\src\main\resources\keys
 
 # 2. Gerar a chave privada (private_key.pem)
-openssl genpkey -algorithm RSA -out AVICIA\api\src\main\resources\keys\private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl genpkey -algorithm RSA -out api\src\main\resources\keys\private_key.pem -pkeyopt rsa_keygen_bits:2048
 
 # 3. Gerar a chave pública (public_key.pem) a partir da chave privada
-openssl rsa -pubout -in AVICIA\api\src\main\resources\keys\private_key.pem -out AVICIA\api\src\main\resources\keys\public_key.pem
+openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out AVICIA\api\src\main\resources\keys\public_key.pem
 
 ```
 
