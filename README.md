@@ -30,7 +30,7 @@ mkdir api\src\main\resources\keys
 openssl genpkey -algorithm RSA -out api\src\main\resources\keys\private_key.pem -pkeyopt rsa_keygen_bits:2048
 
 # 3. Gerar a chave pública (public_key.pem) a partir da chave privada
-openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out AVICIA\api\src\main\resources\keys\public_key.pem
+openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out api\src\main\resources\keys\public_key.pem
 
 ```
 
