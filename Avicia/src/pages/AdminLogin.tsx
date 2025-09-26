@@ -52,7 +52,7 @@ const AdminLogin = () => {
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="adminUser"
-                    placeholder="Nome de usuário admin"
+                    placeholder="Usuário"
                     className="pl-10"
                     required
                   />
@@ -66,7 +66,7 @@ const AdminLogin = () => {
                   <Input
                     id="adminPassword"
                     type="password"
-                    placeholder="Senha administrativa"
+                    placeholder="Senha"
                     className="pl-10"
                     required
                   />
@@ -78,7 +78,7 @@ const AdminLogin = () => {
                 className="w-full bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive/80 transition-all duration-300"
               >
                 <Shield className="h-4 w-4 mr-2" />
-                Acessar Painel Admin
+                Acessar Painel Administrativo
               </Button>
             </form>
 
