@@ -79,6 +79,7 @@ lib-cov
 
 # IDE / editor
 .vscode-test
+.vscode
 
 # Vite logs
 vite.config.js.timestamp-*
