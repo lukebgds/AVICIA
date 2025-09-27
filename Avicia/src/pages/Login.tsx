@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Lock, User, Stethoscope } from "lucide-react";
+import { User, Lock, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 
@@ -24,18 +24,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const resultado = await api.loginPaciente({
+      await api.loginPaciente({
         cpf: loginData.cpf,
         senha: loginData.senha,
       });
-
-      localStorage.setItem("token", resultado.accessToken);
-      localStorage.setItem("expiresIn", resultado.expiresIn.toString());
-
-      console.log(
-        "🔐 Token salvo no localStorage:",
-        resultado.accessToken.substring(0, 20) + "..."
-      );
 
       toast({
         title: "Login realizado com sucesso!",
@@ -70,11 +62,11 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Card de Login */}
         <Card className="shadow-2xl border border-blue-200/50 bg-white/95 backdrop-blur-sm rounded-2xl w-full">
           <CardHeader className="text-center py-4">
             <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2">
-              <User className="h-6 w-6" />Entrar
+              <User className="h-6 w-6" />
+              Entrar
             </CardTitle>
           </CardHeader>
 
@@ -124,15 +116,13 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  {loading ? "Entrando..." : "Entrar"}
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                {loading ? "Entrando..." : "Entrar"}
+              </Button>
 
               <div className="text-center mt-6">
                 <p className="text-gray-600 text-sm">
