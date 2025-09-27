@@ -10,10 +10,11 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/roles.sql:/docker-entrypoint-initdb.d/roles.sql
       - ./database/insert.sql:/docker-entrypoint-initdb.d/insert.sql
 volumes:
   pgdata:
+    name: meu_postgres_data
     driver: local
