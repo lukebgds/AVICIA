@@ -53,10 +53,10 @@ const apiFetch = async <T>(
     }
 
     const data = await response.json();
-    console.log(`✅ Resposta recebida: ${endpoint}`, data);
+    console.log(`✅🚀 Resposta recebida: ${endpoint}`, data);
     return data as T;
   } catch (error) {
-    console.error(`❌ Erro na requisição: ${endpoint}`, error);
+    console.error(`❌🚀 Erro na requisição: ${endpoint}`, error);
     throw error;
   }
 };
@@ -70,7 +70,7 @@ export const api = {
       false,
       `Role "${nome}" não encontrada`
     );
-    console.log("✅ Role encontrada:", role);
+    console.log("✅🔍 Role encontrada:", role);
     return role;
   },
 
@@ -82,7 +82,7 @@ export const api = {
       false,
       "Erro ao criar usuário"
     );
-    console.log("✅ Usuário criado:", usuarioCriado);
+    console.log("✅👤 Usuário criado:", usuarioCriado);
     return usuarioCriado;
   },
 
@@ -94,7 +94,7 @@ export const api = {
       false,
       "Erro ao criar paciente"
     );
-    console.log("✅ Paciente criado:", pacienteCriado);
+    console.log("✅🏥 Paciente criado:", pacienteCriado);
     return pacienteCriado;
   },
 
@@ -106,7 +106,7 @@ export const api = {
       true,
       "Erro ao criar funcionário"
     );
-    console.log("✅ Funcionário criado:", funcionarioCriado);
+    console.log("✅👔  Funcionário criado:", funcionarioCriado);
     return funcionarioCriado;
   },
 
@@ -120,7 +120,7 @@ export const api = {
     );
     localStorage.setItem("token", resultado.accessToken);
     localStorage.setItem("expiresIn", resultado.expiresIn.toString());
-    console.log("✅ Login paciente bem-sucedido:", resultado);
+    console.log("✅🔐 Login paciente bem-sucedido:", resultado);
     return resultado;
   },
 
@@ -134,7 +134,7 @@ export const api = {
     );
     localStorage.setItem("token", resultado.accessToken);
     localStorage.setItem("expiresIn", resultado.expiresIn.toString());
-    console.log("✅ Login admin bem-sucedido:", resultado);
+    console.log("✅🔐 Login admin bem-sucedido:", resultado);
     return resultado;
   },
 };
