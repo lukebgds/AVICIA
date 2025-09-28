@@ -5,6 +5,19 @@ interface LoginResponse {
   expiresIn: string;
 }
 
+export interface Usuario {
+  idUsuario: string;
+  nome: string;
+}
+
+export interface Paciente {
+  idPaciente: string;
+}
+
+export interface Role {
+  idRole: string;
+}
+
 const apiFetch = async <T>(
   endpoint: string,
   config: RequestInit = {},
@@ -51,7 +64,7 @@ const apiFetch = async <T>(
 export const api = {
   getRoleByName: async (nome: string) => {
     console.log("🔍 Buscando Role:", nome);
-    const role = await apiFetch(
+    const role = await apiFetch<Role>(
       `/roles/${nome}`,
       undefined,
       false,
@@ -63,7 +76,7 @@ export const api = {
 
   criarUsuario: async (dados: any) => {
     console.log("👤 Criando usuário:", dados);
-    const usuarioCriado = await apiFetch(
+    const usuarioCriado = await apiFetch<Usuario>(
       "/usuarios/cadastro",
       { method: "POST", body: JSON.stringify(dados) },
       false,
@@ -75,7 +88,7 @@ export const api = {
 
   criarPaciente: async (dados: any) => {
     console.log("🏥 Criando paciente:", dados);
-    const pacienteCriado = await apiFetch(
+    const pacienteCriado = await apiFetch<Paciente>(
       "/pacientes/cadastro",
       { method: "POST", body: JSON.stringify(dados) },
       false,
