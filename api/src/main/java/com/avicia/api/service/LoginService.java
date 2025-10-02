@@ -31,8 +31,7 @@ public class LoginService {
         Usuario usuario = usuarioRepository.findByNome(loginAdminRequest.nome())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        
-        return passwordEncoder.matches(loginAdminRequest.senha(), usuario.getSenhaHash());
+        return  loginAdminRequest.senha().equals(usuario.getSenhaHash());
     }
 
 }
