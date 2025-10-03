@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,19 @@ import {
 import { api } from "../services/api";
 
 // --- Interfaces ---
+interface BackendUser {
+  idUsuario: number;
+  nome: string;
+  sobrenome: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  ativo: boolean;
+  mfaHabilitado: boolean;
+  dataCriacao: string;
+  idRole: number;
+}
+
 interface User {
   id: number;
   name: string;
@@ -104,6 +117,41 @@ const AdminDashboard = () => {
     user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- Fetch all users ---
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response: BackendUser[] = await api.getAllUsuarios();
+      const mappedUsers: User[] = response.map((u: BackendUser) => ({
+        id: u.idUsuario,
+        name: `${u.nome} ${u.sobrenome}`.trim(),
+        email: u.email,
+        role: u.idRole === 101 ? "SYSTEM.ADMIN" : u.idRole === 501 ? "Funcionário" : u.idRole === 701 ? "Paciente" : "Desconhecido",
+        status: u.ativo ? "Ativo" : "Inativo",
+        lastLogin: "Nunca",  // Pode ser expandido com outra query se necessário
+        phone: u.telefone,
+        cpf: u.cpf,
+        // Outros campos opcionais: Deixe undefined por enquanto
+      }));
+      setUsers(mappedUsers);
+    } catch (error: any) {
+      console.error("Erro ao buscar usuários:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar usuários. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === "users") {
+      fetchUsers();
+    }
+  }, [activeSection]);
+
   // --- Functions ---
   const handleAddUser = () => {
     setEditingUser(null);
@@ -118,23 +166,35 @@ const AdminDashboard = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteUser = (userId: number) => {
-    const userToDelete = users.find(u => u.id === userId);
-    setUsers(users.filter(u => u.id !== userId));
-    toast({
-      title: "Usuário Removido",
-      description: "Usuário removido com sucesso",
-      variant: "destructive",
-    });
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      // Aqui você pode adicionar uma chamada API para deletar, se existir
+      // await api.deletarUsuario(userId);
+      const userToDelete = users.find(u => u.id === userId);
+      setUsers(users.filter(u => u.id !== userId));
+      toast({
+        title: "Usuário Removido",
+        description: "Usuário removido com sucesso",
+        variant: "destructive",
+      });
 
-    if (userToDelete) {
-        const newActivity: ActivityLog = {
-            action: `Usuário removido: ${userToDelete.name}`,
-            user: 'Admin',
-            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'warning',
-        };
-        setRecentActivities([newActivity, ...recentActivities]);
+      if (userToDelete) {
+          const newActivity: ActivityLog = {
+              action: `Usuário removido: ${userToDelete.name}`,
+              user: 'Admin',
+              time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              status: 'warning',
+          };
+          setRecentActivities([newActivity, ...recentActivities]);
+      }
+      // Refetch após delete para sincronizar
+      await fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Falha ao remover usuário.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -248,6 +308,8 @@ setLoading(true);
           status: 'success',
         };
         setRecentActivities([newActivity, ...recentActivities]);
+        // Refetch após create para sincronizar
+        await fetchUsers();
       } catch (error: any) {
         console.error("❌ Erro detalhado:", error);
         toast({
@@ -259,15 +321,27 @@ setLoading(true);
         return;
       }
     } else if (editingUser) {
-      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...dataToSave } as User : u));
-      toast({ title: "Usuário Atualizado", description: "Usuário atualizado com sucesso" });
-      const newActivity: ActivityLog = {
-        action: `Dados atualizados: ${dataToSave.name}`,
-        user: 'Admin',
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'success',
-      };
-      setRecentActivities([newActivity, ...recentActivities]);
+      try {
+        // Aqui você pode adicionar uma chamada API para update, se existir
+        // await api.atualizarUsuario(editingUser.id, dataToSave);
+        setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...dataToSave } as User : u));
+        toast({ title: "Usuário Atualizado", description: "Usuário atualizado com sucesso" });
+        const newActivity: ActivityLog = {
+          action: `Dados atualizados: ${dataToSave.name}`,
+          user: 'Admin',
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'success',
+        };
+        setRecentActivities([newActivity, ...recentActivities]);
+        // Refetch após update para sincronizar
+        await fetchUsers();
+      } catch (error: any) {
+        toast({
+          title: "Erro",
+          description: "Falha ao atualizar usuário.",
+          variant: "destructive",
+        });
+      }
     } else {
       const newUser: User = {
         ...(dataToSave as User),
@@ -284,6 +358,8 @@ setLoading(true);
         status: 'success',
       };
       setRecentActivities([newActivity, ...recentActivities]);
+      // Refetch após create para sincronizar
+      await fetchUsers();
     }
 
     setIsDialogOpen(false);
@@ -372,22 +448,30 @@ setLoading(true);
   const renderUserManagement = () => (
     <div className="space-y-6">
       <Card>
-        <CardHeader><div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-gray-700"><Users className="h-5 w-5" />Gerenciamento de Usuários</CardTitle><Button onClick={handleAddUser} size="sm" className="bg-red-600 hover:bg-red-700 text-white"><UserPlus className="h-4 w-4 mr-2" />Novo Usuário</Button></div></CardHeader>
+        <CardHeader><div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-gray-700"><Users className="h-5 w-5" />Gerenciamento de Usuários</CardTitle><Button onClick={handleAddUser} size="sm" className="bg-red-600 hover:bg-red-700 text-white" disabled={loading}><UserPlus className="h-4 w-4 mr-2" />Novo Usuário</Button></div></CardHeader>
         <CardContent>
-          <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Pesquisar usuários por nome, email ou função..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div></div>
-          <Table><TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Email</TableHead><TableHead>Função</TableHead><TableHead>Status</TableHead><TableHead>Último Login</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium text-gray-800">{user.name}</TableCell><TableCell className="text-gray-600">{user.email}</TableCell>
-                  <TableCell><Badge className={user.role === "Profissional de Saúde" ? "bg-blue-100 text-blue-800" : user.role === "Paciente" ? "bg-gray-100 text-gray-800" : user.role === "Funcionário" ? "bg-teal-100 text-teal-800" : "bg-purple-100 text-purple-800"}>{user.role}</Badge></TableCell>
-                  <TableCell><Badge className={user.status === "Ativo" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}>{user.status}</Badge></TableCell>
-                  <TableCell className="text-sm text-gray-500">{user.lastLogin}</TableCell>
-                  <TableCell><div className="flex gap-2 justify-end"><Button size="icon" variant="ghost" onClick={() => handleEditUser(user)}><Edit className="h-4 w-4 text-gray-500 hover:text-red-600" /></Button><Button size="icon" variant="ghost" onClick={() => handleDeleteUser(user.id)}><Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" /></Button></div></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <p>Carregando usuários...</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Pesquisar usuários por nome, email ou função..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div></div>
+              <Table><TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Email</TableHead><TableHead>Função</TableHead><TableHead>Status</TableHead><TableHead>Último Login</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium text-gray-800">{user.name}</TableCell><TableCell className="text-gray-600">{user.email}</TableCell>
+                      <TableCell><Badge className={user.role === "Profissional de Saúde" ? "bg-blue-100 text-blue-800" : user.role === "Paciente" ? "bg-gray-100 text-gray-800" : user.role === "Funcionário" ? "bg-teal-100 text-teal-800" : user.role === "SYSTEM.ADMIN" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-800"}>{user.role}</Badge></TableCell>
+                      <TableCell><Badge className={user.status === "Ativo" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}>{user.status}</Badge></TableCell>
+                      <TableCell className="text-sm text-gray-500">{user.lastLogin}</TableCell>
+                      <TableCell><div className="flex gap-2 justify-end"><Button size="icon" variant="ghost" onClick={() => handleEditUser(user)}><Edit className="h-4 w-4 text-gray-500 hover:text-red-600" /></Button><Button size="icon" variant="ghost" onClick={() => handleDeleteUser(user.id)}><Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" /></Button></div></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          )}
         </CardContent>
       </Card>
       {renderUserForm()}

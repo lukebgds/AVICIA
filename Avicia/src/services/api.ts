@@ -22,6 +22,20 @@ interface Funcionario {
   idFuncionario: string;
 }
 
+// Nova interface para o response de getAllUsuarios (array de usuários)
+interface UsuariosResponse {
+  idUsuario: number;
+  nome: string;
+  sobrenome: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  ativo: boolean;
+  mfaHabilitado: boolean;
+  dataCriacao: string;
+  idRole: number;
+}
+
 const apiFetch = async <T>(
   endpoint: string,
   config: RequestInit = {},
@@ -77,6 +91,18 @@ export const api = {
     );
     console.log("✅🔍 Role encontrada:", role);
     return role;
+  },
+
+  getAllUsuarios: async (): Promise<UsuariosResponse[]> => {
+    console.log("👥 Buscando todos os usuários...");
+    const usuarios = await apiFetch<UsuariosResponse[]>(
+      "/api/usuarios",
+      { method: "GET" },
+      true,
+      "Erro ao buscar usuários"
+    );
+    console.log("✅👥 Usuários carregados:", usuarios);
+    return usuarios;
   },
 
   criarUsuario: async (dados: any) => {
