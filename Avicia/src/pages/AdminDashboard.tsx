@@ -29,6 +29,7 @@ import {
   DollarSign,
   KeyRound
 } from "lucide-react";
+import { api } from "../services/api";
 
 // --- Interfaces ---
 interface User {
@@ -87,6 +88,7 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<User & { confirmPassword?: string }>>({});
+  const [loading, setLoading] = useState(false);
 
   // --- Static Data & Constants ---
   const systemStats = [
@@ -136,7 +138,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!formData.name || !formData.email || !formData.role) {
       toast({
         title: "Erro",
@@ -166,7 +168,97 @@ const AdminDashboard = () => {
 
     delete dataToSave.confirmPassword;
 
-    if (editingUser) {
+setLoading(true);
+
+  if (!editingUser && formData.role === "Funcionário") {
+    try {
+      console.log("📋 Dados do form:", formData);
+
+      const role = await api.getRoleByName("FUNCIONÁRIO");
+      const idRole = role.idRole;
+      console.log("🔍 Role FUNCIONÁRIO encontrada:", { idRole });
+
+      const nomeCompleto = formData.name.trim();
+      const ultimoEspaco = nomeCompleto.lastIndexOf(" ");
+      const nome =
+        ultimoEspaco > 0
+          ? nomeCompleto.substring(0, ultimoEspaco)
+          : nomeCompleto;
+      const sobrenome =
+        ultimoEspaco > 0 ? nomeCompleto.substring(ultimoEspaco + 1) : "";
+
+      const usuarioData = {
+        nome,
+        sobrenome,
+        cpf: (formData.cpf || "").replace(/\D/g, ""),
+        email: formData.email,
+        senha: formData.password,
+        telefone: formData.phone || "",
+        ativo: true,
+        mfaHabilitado: false,
+        dataCriacao: new Date().toISOString().split("T")[0],
+        idRole: idRole,
+      };
+
+      const usuarioCriado = await api.criarUsuario(usuarioData);
+      const idUsuario = usuarioCriado.idUsuario;
+      console.log("👤 Usuário criado:", { idUsuario });
+
+      let sexo = "OUTRO";
+      if (formData.gender === "Masculino") sexo = "MASCULINO";
+      else if (formData.gender === "Feminino") sexo = "FEMININO";
+
+      let estadoCivil = "";
+      if (formData.maritalStatus === "Solteiro(a)") estadoCivil = "solteiro";
+      else if (formData.maritalStatus === "Casado(a)") estadoCivil = "casado";
+      else if (formData.maritalStatus === "Divorciado(a)") estadoCivil = "divorciado";
+      else if (formData.maritalStatus === "Viuvo(a)") estadoCivil = "viuvo";
+
+      const funcionarioData = {
+        idUsuario,
+        dataNascimento: formData.birthDate || "",
+        sexo,
+        estadoCivil,
+        profissao: formData.profession || "",
+        endereco: formData.address || "",
+        matricula: formData.matricula || "",
+        cargo: formData.cargo || "",
+        setor: formData.setor || "",
+        observacoes: formData.observacoes || "",
+        preferenciaContato: "EMAIL",
+      };
+
+      const funcionarioCriado = await api.criarFuncionario(funcionarioData);
+      console.log("👔 Funcionário criado:", {
+        idFuncionario: funcionarioCriado.idFuncionario,
+      });
+
+        const newUser: User = {
+          ...(dataToSave as User),
+          id: Number(idUsuario),
+          status: "Ativo",
+          lastLogin: "Nunca",
+        };
+        setUsers([...users, newUser]);
+        toast({ title: "Usuário Criado", description: "Novo usuário criado com sucesso" });
+        const newActivity: ActivityLog = {
+          action: `Novo usuário criado: ${newUser.name}`,
+          user: 'Admin',
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'success',
+        };
+        setRecentActivities([newActivity, ...recentActivities]);
+      } catch (error: any) {
+        console.error("❌ Erro detalhado:", error);
+        toast({
+          title: "Erro no cadastro",
+          description: error.message || "Tente novamente mais tarde",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    } else if (editingUser) {
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...dataToSave } as User : u));
       toast({ title: "Usuário Atualizado", description: "Usuário atualizado com sucesso" });
       const newActivity: ActivityLog = {
@@ -176,7 +268,6 @@ const AdminDashboard = () => {
         status: 'success',
       };
       setRecentActivities([newActivity, ...recentActivities]);
-
     } else {
       const newUser: User = {
         ...(dataToSave as User),
@@ -198,6 +289,7 @@ const AdminDashboard = () => {
     setIsDialogOpen(false);
     setFormData({});
     setEditingUser(null);
+    setLoading(false);
   };
 
   const getStatusIcon = (status: string) => {
@@ -272,7 +364,7 @@ const AdminDashboard = () => {
             </>
           )}
         </div>
-        <div className="flex justify-end gap-2 pt-4 border-t"><Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button><Button onClick={handleSaveUser} className="bg-red-600 hover:bg-red-700 text-white">{editingUser ? "Atualizar" : "Criar"}</Button></div>
+        <div className="flex justify-end gap-2 pt-4 border-t"><Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button><Button disabled={loading} onClick={handleSaveUser} className="bg-red-600 hover:bg-red-700 text-white">{loading ? "Salvando..." : (editingUser ? "Atualizar" : "Criar")}</Button></div>
       </DialogContent>
     </Dialog>
   );
@@ -369,4 +461,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

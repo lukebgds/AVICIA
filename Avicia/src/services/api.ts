@@ -5,17 +5,21 @@ interface LoginResponse {
   expiresIn: string;
 }
 
-export interface Usuario {
+interface Usuario {
   idUsuario: string;
   nome: string;
 }
 
-export interface Paciente {
+interface Paciente {
   idPaciente: string;
 }
 
-export interface Role {
+interface Role {
   idRole: string;
+}
+
+interface Funcionario {
+  idFuncionario: string;
 }
 
 const apiFetch = async <T>(
@@ -26,13 +30,14 @@ const apiFetch = async <T>(
 ): Promise<T> => {
   const token = localStorage.getItem("token");
 
+  const baseHeaders: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
   if (requireAuth && !token) {
     throw new Error("Autenticação necessária. Faça login.");
   }
 
-  const baseHeaders: HeadersInit = {
-    "Content-Type": "application/json",
-  };
   if (requireAuth && token) {
     baseHeaders.Authorization = `Bearer ${token}`;
   }
@@ -62,13 +67,13 @@ const apiFetch = async <T>(
 };
 
 export const api = {
-  getRoleByName: async (nome: string) => {
-    console.log("🔍 Buscando Role:", nome);
+  getRoleByName: async (dados: any) => {
+    console.log("🔍 Buscando Role:", dados);
     const role = await apiFetch<Role>(
-      `/roles/${nome}`,
+      `/roles/${dados}`,
       undefined,
       false,
-      `Role "${nome}" não encontrada`
+      `Role "${dados}" não encontrada`
     );
     console.log("✅🔍 Role encontrada:", role);
     return role;
@@ -100,7 +105,7 @@ export const api = {
 
   criarFuncionario: async (dados: any) => {
     console.log("👔 Criando funcionário:", dados);
-    const funcionarioCriado = await apiFetch(
+    const funcionarioCriado = await apiFetch<Funcionario>(
       "/funcionarios/cadastro",
       { method: "POST", body: JSON.stringify(dados) },
       true,
