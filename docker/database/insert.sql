@@ -68,7 +68,7 @@ INSERT INTO seguranca.roles (
 )
 VALUES (
     601,
-    'PROFISSIONAL_SAUDE',
+    'PROFISSIONAL.SAUDE',
     '{
         "sistema": "N",
         "usuarios": "R",

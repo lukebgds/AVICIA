@@ -1,12 +1,13 @@
 const BASE_URL = "http://localhost:9081/api";
 
+// --- Interfaces de Retorno ---
 interface LoginResponse {
   accessToken: string;
   expiresIn: string;
 }
 
 interface Usuario {
-  idUsuario: string;
+  idUsuario: number;
   nome: string;
 }
 
@@ -22,7 +23,11 @@ interface Funcionario {
   idFuncionario: string;
 }
 
-// Nova interface para o response de getAllUsuarios (array de usuários)
+interface Profissional_saude {
+  idFuncionario: number;
+  idProfissionalSaude: number;
+}
+
 interface UsuariosResponse {
   idUsuario: number;
   nome: string;
@@ -34,6 +39,61 @@ interface UsuariosResponse {
   mfaHabilitado: boolean;
   dataCriacao: string;
   idRole: number;
+}
+
+// --- Interfaces de Entrada ---
+interface CreateUsuarioInput {
+  nome: string;
+  sobrenome: string;
+  cpf: string;
+  email: string;
+  senha: string;
+  telefone?: string;
+  ativo: boolean;
+  mfaHabilitado: boolean;
+  dataCriacao: string;
+  idRole: string;
+  dataNascimento?: string;
+  sexo?: string;
+  estadoCivil?: string;
+  profissao?: string;
+  endereco?: string;
+  preferenciaContato?: string;
+}
+
+interface CreatePacienteInput {
+  idUsuario: number;
+  dataNascimento: string;
+  sexo: string;
+  estadoCivil: string;
+  profissao: string;
+  endereco: string;
+  preferenciaContato: string;
+}
+
+interface CreateFuncionarioInput {
+  idUsuario: number;
+  cargo: string;
+  setor: string;
+  matricula: string;
+  observacoes?: string;
+}
+
+interface CreateProfissionalSaudeInput {
+  idUsuario: number;
+  cargo: string;
+  unidade: string;
+  especialidade: string;
+  conselho: string;
+  numero_conselho: string;
+  matricula: string;
+  observacoes?: string;
+}
+
+interface LoginInput {
+  cpf?: string;
+  nome?: string;
+  senha: string;
 }
 
 const apiFetch = async <T>(
@@ -67,7 +127,7 @@ const apiFetch = async <T>(
     if (!response.ok) {
       const errorData = await response
         .json()
-        .catch(() => ({ message: "Erro desconhecido" }));
+        .catch(() => ({ message: "Erro desconhecido no servidor" }));
       throw new Error(errorMessage || errorData.message);
     }
 
@@ -80,14 +140,15 @@ const apiFetch = async <T>(
   }
 };
 
+// --- API Services ---
 export const api = {
-  getRoleByName: async (dados: any) => {
-    console.log("🔍 Buscando Role:", dados);
+  getRoleByName: async (roleName: string): Promise<Role> => {
+    console.log("🔍 Buscando Role:", roleName);
     const role = await apiFetch<Role>(
-      `/roles/${dados}`,
-      undefined,
+      `/roles/${roleName}`,
+      { method: "GET" },
       false,
-      `Role "${dados}" não encontrada`
+      `Role "${roleName}" não encontrada`
     );
     console.log("✅🔍 Role encontrada:", role);
     return role;
@@ -96,16 +157,16 @@ export const api = {
   getAllUsuarios: async (): Promise<UsuariosResponse[]> => {
     console.log("👥 Buscando todos os usuários...");
     const usuarios = await apiFetch<UsuariosResponse[]>(
-      "/api/usuarios",
+      "/usuarios",
       { method: "GET" },
       true,
-      "Erro ao buscar usuários"
+      "Erro ao buscar lista de usuários"
     );
     console.log("✅👥 Usuários carregados:", usuarios);
     return usuarios;
   },
 
-  criarUsuario: async (dados: any) => {
+  criarUsuario: async (dados: CreateUsuarioInput): Promise<Usuario> => {
     console.log("👤 Criando usuário:", dados);
     const usuarioCriado = await apiFetch<Usuario>(
       "/usuarios/cadastro",
@@ -117,7 +178,7 @@ export const api = {
     return usuarioCriado;
   },
 
-  criarPaciente: async (dados: any) => {
+  criarPaciente: async (dados: CreatePacienteInput): Promise<Paciente> => {
     console.log("🏥 Criando paciente:", dados);
     const pacienteCriado = await apiFetch<Paciente>(
       "/pacientes/cadastro",
@@ -129,19 +190,35 @@ export const api = {
     return pacienteCriado;
   },
 
-  criarFuncionario: async (dados: any) => {
+  criarFuncionario: async (
+    dados: CreateFuncionarioInput
+  ): Promise<Funcionario> => {
     console.log("👔 Criando funcionário:", dados);
     const funcionarioCriado = await apiFetch<Funcionario>(
-      "/funcionarios/cadastro",
+      "/funcionarios",
       { method: "POST", body: JSON.stringify(dados) },
       true,
       "Erro ao criar funcionário"
     );
-    console.log("✅👔  Funcionário criado:", funcionarioCriado);
+    console.log("✅👔 Funcionário criado:", funcionarioCriado);
     return funcionarioCriado;
   },
 
-  loginPaciente: async (dados: any) => {
+  criarProfissional_saude: async (
+    dados: CreateProfissionalSaudeInput
+  ): Promise<Profissional_saude> => {
+    console.log("🩺 Criando profissional de saúde:", dados);
+    const profissionalCriado = await apiFetch<Profissional_saude>(
+      "/profissionais-saude",
+      { method: "POST", body: JSON.stringify(dados) },
+      true,
+      "Erro ao criar profissional de saúde"
+    );
+    console.log("✅🩺 Profissional de saúde criado:", profissionalCriado);
+    return profissionalCriado;
+  },
+
+  loginPaciente: async (dados: LoginInput): Promise<LoginResponse> => {
     console.log("🔐 Login paciente:", dados);
     const resultado = await apiFetch<LoginResponse>(
       "/login",
@@ -150,12 +227,12 @@ export const api = {
       "CPF ou senha incorretos"
     );
     localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn.toString());
+    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login paciente bem-sucedido:", resultado);
     return resultado;
   },
 
-  loginAdmin: async (dados: any) => {
+  loginAdmin: async (dados: LoginInput): Promise<LoginResponse> => {
     console.log("🔐 Login admin:", dados);
     const resultado = await apiFetch<LoginResponse>(
       "/admin/login",
@@ -164,7 +241,7 @@ export const api = {
       "Nome ou senha incorretos"
     );
     localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn.toString());
+    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login admin bem-sucedido:", resultado);
     return resultado;
   },

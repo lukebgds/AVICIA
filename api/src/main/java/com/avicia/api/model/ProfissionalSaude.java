@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(schema = "seguranca", name = "usuario_profissional_saude")
+@Table(schema = "cadastro", name = "usuario_profissional_saude")
 @Getter
 @Setter
 @NoArgsConstructor
 public class ProfissionalSaude {
 
     @Id
-    @Column(name = "id_profissional")
+    @Column(name = "id_profissional_saude")
     private Integer idProfissional;
 
     @ManyToOne
@@ -27,6 +27,9 @@ public class ProfissionalSaude {
 
     @Column(name = "matricula")
     private String matricula;
+
+    @Column(name = "conselho")
+    private String conselho;
 
     @Column(name = "registro_conselho")
     private String registroConselho;
