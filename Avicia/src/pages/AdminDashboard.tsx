@@ -174,7 +174,7 @@ setLoading(true);
     try {
       console.log("📋 Dados do form:", formData);
 
-      const role = await api.getRoleByName("FUNCIONÁRIO");
+      const role = await api.getRoleByName("FUNCIONARIO");
       const idRole = role.idRole;
       console.log("🔍 Role FUNCIONÁRIO encontrada:", { idRole });
 
