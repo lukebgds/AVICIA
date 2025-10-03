@@ -60,6 +60,27 @@ VALUES (
     'Funcionário operacional'
 );
 
+INSERT INTO seguranca.roles (
+    id_role,
+    nome,
+    permissoes,
+    descricao
+)
+VALUES (
+    601,
+    'PROFISSIONAL_SAUDE',
+    '{
+        "sistema": "N",
+        "usuarios": "R",
+        "pacientes": "RW",
+        "consultas": "RW",
+        "exames": "RW",
+        "financeiro": "N",
+        "relatorios": "R"
+    }'::jsonb,
+    'Profissional de saúde (médico/enfermeiro)'
+);
+
 INSERT INTO seguranca.usuario (
     id_usuario,
     id_role,
@@ -85,4 +106,3 @@ INSERT INTO seguranca.usuario (
     false,
     true
 );
-
