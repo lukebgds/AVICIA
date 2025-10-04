@@ -8,6 +8,7 @@ public class ProfissionalSaudeResponse {
 	private Integer idProfissional;
 	private UsuarioResponse usuario;
     private String matricula;
+    private String conselho;
     private String registroConselho;
     private String especialidade;
     private String cargo;
