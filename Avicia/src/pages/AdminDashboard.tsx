@@ -68,7 +68,7 @@ interface User {
   matricula?: string;
   cargo?: string;
   conselho?: string;
-  registro_conselho?: string;
+  registroConselho?: string;
   unidade?: string;
   setor?: string;
   observacoes?: string;
@@ -192,34 +192,52 @@ const AdminDashboard = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteUser = async (userId: number) => {
-    try {
-      const userToDelete = users.find((u) => u.id === userId);
-      setUsers(users.filter((u) => u.id !== userId));
-      toast({
-        title: "Usuário Removido",
-        description: "Usuário removido com sucesso",
-        variant: "destructive",
-      });
+const [isDeleting, setIsDeleting] = useState<number | null>(null); // Adicionar estado para feedback de carregamento
 
-      if (userToDelete) {
-        const newActivity: ActivityLog = {
-          action: `Usuário removido: ${userToDelete.name}`,
-          user: "Admin",
-          time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-          status: "warning",
-        };
-        setRecentActivities([newActivity, ...recentActivities]);
-      }
-      await fetchUsers();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao remover usuário.",
-        variant: "destructive",
-      });
-    }
-  };
+const handleDeleteUser = async (userId: number) => {
+  const userToDelete = users.find((u) => u.id === userId);
+  if (!userToDelete) {
+    toast({
+      title: "Erro",
+      description: "Usuário não encontrado.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const confirmDelete = window.confirm(`Tem certeza que deseja excluir o usuário ${userToDelete.name}?`);
+  if (!confirmDelete) return;
+
+  try {
+    setIsDeleting(userId); // Indica que a exclusão está em andamento
+    await api.deleteUsuario(userId); // Chama o método da API
+    setUsers(users.filter((u) => u.id !== userId)); // Remove da lista local
+    toast({
+      title: "Usuário Removido",
+      description: `Usuário ${userToDelete.name} removido com sucesso`,
+      variant: "default",
+    });
+
+    const newActivity: ActivityLog = {
+      action: `Usuário removido: ${userToDelete.name}`,
+      user: "Admin",
+      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      status: "warning",
+    };
+    setRecentActivities([newActivity, ...recentActivities]);
+
+    await fetchUsers(); // Recarrega a lista para sincronizar com o backend
+  } catch (error) {
+    console.error("Erro ao deletar usuário:", error);
+    toast({
+      title: "Erro",
+      description: "Falha ao remover usuário. Tente novamente.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsDeleting(null); // Reseta o estado de carregamento
+  }
+};
 
   const handleSaveUser = async () => {
     if (!formData.name || !formData.email || !formData.role) {
@@ -300,12 +318,12 @@ const AdminDashboard = () => {
           const funcionarioData = { idUsuario, cargo: formData.cargo || "", setor: formData.setor || "", matricula: formData.matricula || "", observacoes: formData.observacoes || "" };
           entityCriada = await api.criarFuncionario(funcionarioData);
         } else if (formData.role === "Profissional de Saúde") {
-          if (!formData.cargo || !formData.matricula || !formData.unidade || !formData.specialty || !formData.conselho || !formData.registro_conselho) {
+          if (!formData.cargo || !formData.matricula || !formData.unidade || !formData.specialty || !formData.conselho || !formData.registroConselho) {
             toast({ title: "Erro", description: "Campos obrigatórios faltando para Profissional de Saúde.", variant: "destructive" });
             setLoading(false);
             return;
           }
-          const profissionalData = { idUsuario, cargo: formData.cargo || "", unidade: formData.unidade || "", especialidade: formData.specialty || "", conselho: formData.conselho || "", numero_conselho: formData.registro_conselho || "", matricula: formData.matricula || "", observacoes: formData.observacoes || "" };
+          const profissionalData = { idUsuario, cargo: formData.cargo || "", unidade: formData.unidade || "", especialidade: formData.specialty || "", conselho: formData.conselho || "", registroConselho: formData.registroConselho || "", matricula: formData.matricula || ""};
           entityCriada = await api.criarProfissional_saude(profissionalData);
         }
 
@@ -399,7 +417,7 @@ const AdminDashboard = () => {
               <div className="space-y-2"><Label htmlFor="unidade">Unidade</Label><Input id="unidade" value={formData.unidade || ""} onChange={(e) => setFormData({ ...formData, unidade: e.target.value })} placeholder="Unidade de atuação" /></div>
               <div className="space-y-2"><Label htmlFor="specialty">Especialidade</Label><Input id="specialty" value={formData.specialty || ""} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })} placeholder="Especialidade médica" /></div>
               <div className="space-y-2"><Label htmlFor="conselho">Conselho Profissional</Label><Input id="conselho" value={formData.conselho || ""} onChange={(e) => setFormData({ ...formData, conselho: e.target.value })} placeholder="Ex: CRM, COREN" /></div>
-              <div className="space-y-2"><Label htmlFor="registro_conselho">Nº do Conselho</Label><Input id="registro_conselho" value={formData.registro_conselho || ""} onChange={(e) => setFormData({ ...formData, registro_conselho: e.target.value })} placeholder="123456-PE" /></div>
+              <div className="space-y-2"><Label htmlFor="registroConselho">Nº do Conselho</Label><Input id="registroConselho" value={formData.registroConselho || ""} onChange={(e) => setFormData({ ...formData, registroConselho: e.target.value })} placeholder="123456-PE" /></div>
             </>
           )}
         </div>
@@ -499,7 +517,7 @@ const AdminDashboard = () => {
                             <Button size="icon" variant="ghost" onClick={() => handleEditUser(user)}>
                               <Edit className="h-4 w-4 text-gray-500 hover:text-red-600" />
                             </Button>
-                            <Button size="icon" variant="ghost" onClick={() => handleDeleteUser(user.id)}>
+                            <Button size="icon" variant="ghost" onClick={() => handleDeleteUser(user.id)} disabled={isDeleting === user.id}>
                               <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" />
                             </Button>
                           </div>

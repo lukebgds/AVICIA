@@ -85,7 +85,7 @@ interface CreateProfissionalSaudeInput {
   unidade: string;
   especialidade: string;
   conselho: string;
-  numero_conselho: string;
+  registroConselho: string;
   matricula: string;
   observacoes?: string;
 }
@@ -124,6 +124,10 @@ const apiFetch = async <T>(
       ...config,
     });
 
+    console.log(
+      `Status da resposta: ${response.status} ${response.statusText}`
+    );
+
     if (!response.ok) {
       const errorData = await response
         .json()
@@ -131,9 +135,21 @@ const apiFetch = async <T>(
       throw new Error(errorMessage || errorData.message);
     }
 
-    const data = await response.json();
-    console.log(`✅🚀 Resposta recebida: ${endpoint}`, data);
-    return data as T;
+    // Lidar com 204 No Content
+    if (response.status === 204) {
+      return undefined as T; // Retorna undefined para respostas sem corpo
+    }
+
+    // Verificar se a resposta é JSON
+    const contentType = response.headers.get("Content-Type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      console.log(`✅🚀 Resposta recebida: ${endpoint}`, data);
+      return data as T;
+    }
+
+    // Para outros tipos de conteúdo, retornar undefined
+    return undefined as T;
   } catch (error) {
     console.error(`❌🚀 Erro na requisição: ${endpoint}`, error);
     throw error;
@@ -188,6 +204,17 @@ export const api = {
     );
     console.log("✅🏥 Paciente criado:", pacienteCriado);
     return pacienteCriado;
+  },
+
+  deleteUsuario: async (idUsuario: number): Promise<void> => {
+    console.log("🗑️ Deletando usuário com ID:", idUsuario);
+    await apiFetch<void>(
+      `/usuarios/${idUsuario}`,
+      { method: "DELETE" },
+      true,
+      "Erro ao deletar usuário"
+    );
+    console.log("✅🗑️ Usuário deletado com sucesso");
   },
 
   criarFuncionario: async (

@@ -31,7 +31,7 @@ public class ProfissionalSaude {
     @Column(name = "conselho")
     private String conselho;
 
-    @Column(name = "registro_conselho")
+    @Column(name = "registroconselho")
     private String registroConselho;
 
     @Column(name = "especialidade")
