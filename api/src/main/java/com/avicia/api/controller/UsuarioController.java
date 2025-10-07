@@ -66,10 +66,10 @@ public class UsuarioController {
             .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{cpf}")
-    public ResponseEntity<Void> deletar(@PathVariable String cpf) {
+    @DeleteMapping("/{idUsuario}") // localhost:9081/api/usuarios/{cpf}
+    public ResponseEntity<Void> deletar(@PathVariable Integer idUsuario) {
 
-        boolean deletado = usuarioService.deletar(cpf);
+        boolean deletado = usuarioService.deletar(idUsuario);
 
         return deletado ? ResponseEntity.noContent().build()
                         : ResponseEntity.notFound().build();

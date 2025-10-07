@@ -45,6 +45,7 @@ public class SecurityConfiguration {
                                                             .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/pacientes/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                                                            .requestMatchers(HttpMethod.GET, "/api/usuarios").permitAll()
 
                                                             // Login Admin
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
@@ -56,7 +57,7 @@ public class SecurityConfiguration {
                                                             // Teste do Token
                                                             .requestMatchers(HttpMethod.GET, "/api/teste-jwt").permitAll()
 
-                                                            .anyRequest().authenticated()
+                                                            .anyRequest().permitAll()
             )
             .cors(Customizer.withDefaults())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

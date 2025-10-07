@@ -1,21 +1,99 @@
 const BASE_URL = "http://localhost:9081/api";
 
+// --- Interfaces de Retorno ---
 interface LoginResponse {
   accessToken: string;
   expiresIn: string;
 }
 
-export interface Usuario {
-  idUsuario: string;
+interface Usuario {
+  idUsuario: number;
   nome: string;
 }
 
-export interface Paciente {
+interface Paciente {
   idPaciente: string;
 }
 
-export interface Role {
+interface Role {
   idRole: string;
+}
+
+interface Funcionario {
+  idFuncionario: string;
+}
+
+interface Profissional_saude {
+  idFuncionario: number;
+  idProfissionalSaude: number;
+}
+
+interface UsuariosResponse {
+  idUsuario: number;
+  nome: string;
+  sobrenome: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  ativo: boolean;
+  mfaHabilitado: boolean;
+  dataCriacao: string;
+  idRole: number;
+}
+
+// --- Interfaces de Entrada ---
+interface CreateUsuarioInput {
+  nome: string;
+  sobrenome: string;
+  cpf: string;
+  email: string;
+  senha: string;
+  telefone?: string;
+  ativo: boolean;
+  mfaHabilitado: boolean;
+  dataCriacao: string;
+  idRole: string;
+  dataNascimento?: string;
+  sexo?: string;
+  estadoCivil?: string;
+  profissao?: string;
+  endereco?: string;
+  preferenciaContato?: string;
+}
+
+interface CreatePacienteInput {
+  idUsuario: number;
+  dataNascimento: string;
+  sexo: string;
+  estadoCivil: string;
+  profissao: string;
+  endereco: string;
+  preferenciaContato: string;
+}
+
+interface CreateFuncionarioInput {
+  idUsuario: number;
+  cargo: string;
+  setor: string;
+  matricula: string;
+  observacoes?: string;
+}
+
+interface CreateProfissionalSaudeInput {
+  idUsuario: number;
+  cargo: string;
+  unidade: string;
+  especialidade: string;
+  conselho: string;
+  registroConselho: string;
+  matricula: string;
+  observacoes?: string;
+}
+
+interface LoginInput {
+  cpf?: string;
+  nome?: string;
+  senha: string;
 }
 
 const apiFetch = async <T>(
@@ -26,13 +104,14 @@ const apiFetch = async <T>(
 ): Promise<T> => {
   const token = localStorage.getItem("token");
 
+  const baseHeaders: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
   if (requireAuth && !token) {
     throw new Error("Autenticação necessária. Faça login.");
   }
 
-  const baseHeaders: HeadersInit = {
-    "Content-Type": "application/json",
-  };
   if (requireAuth && token) {
     baseHeaders.Authorization = `Bearer ${token}`;
   }
@@ -45,36 +124,65 @@ const apiFetch = async <T>(
       ...config,
     });
 
+    console.log(
+      `Status da resposta: ${response.status} ${response.statusText}`
+    );
+
     if (!response.ok) {
       const errorData = await response
         .json()
-        .catch(() => ({ message: "Erro desconhecido" }));
+        .catch(() => ({ message: "Erro desconhecido no servidor" }));
       throw new Error(errorMessage || errorData.message);
     }
 
-    const data = await response.json();
-    console.log(`✅🚀 Resposta recebida: ${endpoint}`, data);
-    return data as T;
+    // Lidar com 204 No Content
+    if (response.status === 204) {
+      return undefined as T; // Retorna undefined para respostas sem corpo
+    }
+
+    // Verificar se a resposta é JSON
+    const contentType = response.headers.get("Content-Type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      console.log(`✅🚀 Resposta recebida: ${endpoint}`, data);
+      return data as T;
+    }
+
+    // Para outros tipos de conteúdo, retornar undefined
+    return undefined as T;
   } catch (error) {
     console.error(`❌🚀 Erro na requisição: ${endpoint}`, error);
     throw error;
   }
 };
 
+// --- API Services ---
 export const api = {
-  getRoleByName: async (nome: string) => {
-    console.log("🔍 Buscando Role:", nome);
+  getRoleByName: async (roleName: string): Promise<Role> => {
+    console.log("🔍 Buscando Role:", roleName);
     const role = await apiFetch<Role>(
-      `/roles/${nome}`,
-      undefined,
+      `/roles/${roleName}`,
+      { method: "GET" },
       false,
-      `Role "${nome}" não encontrada`
+      `Role "${roleName}" não encontrada`
     );
     console.log("✅🔍 Role encontrada:", role);
     return role;
   },
 
-  criarUsuario: async (dados: any) => {
+  getAllUsuarios: async (): Promise<UsuariosResponse[]> => {
+    console.log("👥 Buscando todos os usuários...");
+    const usuarios = await apiFetch<UsuariosResponse[]>(
+      "/usuarios",
+      { method: "GET" },
+      true,
+      "Erro ao buscar lista de usuários"
+    );
+    console.log("✅👥 Usuários carregados:", usuarios);
+    return usuarios;
+  },
+
+  criarUsuario: async (dados: CreateUsuarioInput): Promise<Usuario> => {
     console.log("👤 Criando usuário:", dados);
     const usuarioCriado = await apiFetch<Usuario>(
       "/usuarios/cadastro",
@@ -86,7 +194,7 @@ export const api = {
     return usuarioCriado;
   },
 
-  criarPaciente: async (dados: any) => {
+  criarPaciente: async (dados: CreatePacienteInput): Promise<Paciente> => {
     console.log("🏥 Criando paciente:", dados);
     const pacienteCriado = await apiFetch<Paciente>(
       "/pacientes/cadastro",
@@ -98,19 +206,46 @@ export const api = {
     return pacienteCriado;
   },
 
-  criarFuncionario: async (dados: any) => {
+  deleteUsuario: async (idUsuario: number): Promise<void> => {
+    console.log("🗑️ Deletando usuário com ID:", idUsuario);
+    await apiFetch<void>(
+      `/usuarios/${idUsuario}`,
+      { method: "DELETE" },
+      true,
+      "Erro ao deletar usuário"
+    );
+    console.log("✅🗑️ Usuário deletado com sucesso");
+  },
+
+  criarFuncionario: async (
+    dados: CreateFuncionarioInput
+  ): Promise<Funcionario> => {
     console.log("👔 Criando funcionário:", dados);
-    const funcionarioCriado = await apiFetch(
-      "/funcionarios/cadastro",
+    const funcionarioCriado = await apiFetch<Funcionario>(
+      "/funcionarios",
       { method: "POST", body: JSON.stringify(dados) },
       true,
       "Erro ao criar funcionário"
     );
-    console.log("✅👔  Funcionário criado:", funcionarioCriado);
+    console.log("✅👔 Funcionário criado:", funcionarioCriado);
     return funcionarioCriado;
   },
 
-  loginPaciente: async (dados: any) => {
+  criarProfissional_saude: async (
+    dados: CreateProfissionalSaudeInput
+  ): Promise<Profissional_saude> => {
+    console.log("🩺 Criando profissional de saúde:", dados);
+    const profissionalCriado = await apiFetch<Profissional_saude>(
+      "/profissionais-saude",
+      { method: "POST", body: JSON.stringify(dados) },
+      true,
+      "Erro ao criar profissional de saúde"
+    );
+    console.log("✅🩺 Profissional de saúde criado:", profissionalCriado);
+    return profissionalCriado;
+  },
+
+  loginPaciente: async (dados: LoginInput): Promise<LoginResponse> => {
     console.log("🔐 Login paciente:", dados);
     const resultado = await apiFetch<LoginResponse>(
       "/login",
@@ -119,12 +254,12 @@ export const api = {
       "CPF ou senha incorretos"
     );
     localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn.toString());
+    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login paciente bem-sucedido:", resultado);
     return resultado;
   },
 
-  loginAdmin: async (dados: any) => {
+  loginAdmin: async (dados: LoginInput): Promise<LoginResponse> => {
     console.log("🔐 Login admin:", dados);
     const resultado = await apiFetch<LoginResponse>(
       "/admin/login",
@@ -133,7 +268,7 @@ export const api = {
       "Nome ou senha incorretos"
     );
     localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn.toString());
+    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login admin bem-sucedido:", resultado);
     return resultado;
   },

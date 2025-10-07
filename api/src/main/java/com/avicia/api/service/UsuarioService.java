@@ -113,8 +113,8 @@ public class UsuarioService {
         });
     }
 
-    public boolean deletar(String cpf) {
-        return usuarioRepository.findByCpf(cpf).map(usuario -> {
+    public boolean deletar(Integer idUsuario) {
+        return usuarioRepository.findByIdUsuario(idUsuario).map(usuario -> {
             usuarioRepository.delete(usuario);
             return true;
         }).orElse(false);

@@ -27,9 +27,6 @@ import lombok.RequiredArgsConstructor;
 public class LoginController {
 
     @Autowired
-    private final JwtEncoder jwtEncoder;
-
-    @Autowired
     private final UsuarioRepository usuarioRepository;
 
     @Autowired
