@@ -33,6 +33,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { api } from "../services/api";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 // --- Interfaces ---
 interface BackendUser {
@@ -131,6 +132,7 @@ const mapBackendUserToUser = (user: BackendUser): User => ({
 
 // --- Component ---
 const AdminDashboard = () => {
+  useAuthGuard();
   const { toast } = useToast();
 
   // --- State Management ---
@@ -144,6 +146,7 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState<Partial<User & { confirmPassword?: string }>>({});
   const [loading, setLoading] = useState(false);
   const hasLoadedUsers = useRef(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // --- Data Fetching ---
   const fetchUsers = async () => {
@@ -168,7 +171,11 @@ const AdminDashboard = () => {
 
   // --- Effects ---
   useEffect(() => {
-    fetchUsers(); // Carrega usuários na montagem inicial
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsAuthenticated(true);
+      fetchUsers(); // Chama fetchUsers só se houver token
+    }
     const savedActivities = localStorage.getItem("recentActivities");
     if (savedActivities) setRecentActivities(JSON.parse(savedActivities));
     setSystemStatus([]); // Dados fictícios ou fetch separado se dinâmico

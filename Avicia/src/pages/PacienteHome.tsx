@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
@@ -25,6 +26,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const PacienteHome = () => {
+  useAuthGuard();
   const [patientName] = useState("Nome do Paciente"); // Em um app real, isso viria do contexto de auth
   const navigate = useNavigate();
 
@@ -111,7 +113,11 @@ const PacienteHome = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("expiresIn");
+                  navigate("/login");
+                }}
                 className="hover:bg-blue-50"
               >
                 <LogOut className="h-5 w-5 text-gray-600" />
