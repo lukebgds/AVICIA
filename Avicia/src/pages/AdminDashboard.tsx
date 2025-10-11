@@ -155,8 +155,10 @@ const AdminDashboard = () => {
       const response = await api.getAllUsuarios();
       const mappedUsers = response.map(mapBackendUserToUser);
       setUsers(mappedUsers);
-      // Atualiza estatísticas de usuários ativos
-      SYSTEM_STATS[0].value = mappedUsers.filter((u) => u.status === "Ativo").length;
+      // Atualiza estatísticas de usuários ativos, excluindo SYSTEM.ADMIN
+      SYSTEM_STATS[0].value = mappedUsers.filter(
+        (u) => u.status === "Ativo" && u.role !== "SYSTEM.ADMIN"
+      ).length;
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({
@@ -487,10 +489,12 @@ const handleDeleteUser = async (userId: number) => {
                 </TableHeader>
                 <TableBody>
                   {users
-                    .filter((user) =>
-                      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      user.role.toLowerCase().includes(searchTerm.toLowerCase())
+                    .filter(
+                      (user) =>
+                        user.role !== "SYSTEM.ADMIN" &&
+                        (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.role.toLowerCase().includes(searchTerm.toLowerCase()))
                     )
                     .map((user) => (
                       <TableRow key={user.id}>
@@ -505,8 +509,6 @@ const handleDeleteUser = async (userId: number) => {
                                 ? "bg-gray-100 text-gray-800"
                                 : user.role === "Funcionário"
                                 ? "bg-teal-100 text-teal-800"
-                                : user.role === "SYSTEM.ADMIN"
-                                ? "bg-purple-100 text-purple-800"
                                 : "bg-gray-100 text-gray-800"
                             }
                           >
