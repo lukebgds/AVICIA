@@ -1,5 +1,3 @@
-// AdminDashboard version 9
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,30 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Shield,
-  Users,
-  Database,
-  Settings,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  UserPlus,
-  Edit,
-  Trash2,
-  Search,
-  Stethoscope,
-  BarChart,
-  Calendar,
-  FileText,
-  DollarSign,
-  KeyRound,
-  RefreshCw,
-} from "lucide-react";
+import {Shield, Users, Database, Settings, Activity, AlertTriangle, CheckCircle, XCircle, Clock, UserPlus, Edit, Trash2, Search, Stethoscope, BarChart, Calendar, FileText, DollarSign, KeyRound, RefreshCw,} from "lucide-react";
 import { api } from "../services/api";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAuth } from "@/context/AuthContext";
 
 // --- Interfaces ---
 interface BackendUser {
@@ -134,6 +112,7 @@ const mapBackendUserToUser = (user: BackendUser): User => ({
 const AdminDashboard = () => {
   useAuthGuard();
   const { toast } = useToast();
+  const { token } = useAuth();
 
   // --- State Management ---
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -146,24 +125,22 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState<Partial<User & { confirmPassword?: string }>>({});
   const [loading, setLoading] = useState(false);
   const hasLoadedUsers = useRef(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // --- Data Fetching ---
-  const fetchUsers = async () => {
+const fetchUsers = async () => {
     try {
       setLoading(true);
       const response = await api.getAllUsuarios();
       const mappedUsers = response.map(mapBackendUserToUser);
       setUsers(mappedUsers);
-      // Atualiza estatísticas de usuários ativos, excluindo SYSTEM.ADMIN
       SYSTEM_STATS[0].value = mappedUsers.filter(
         (u) => u.status === "Ativo" && u.role !== "SYSTEM.ADMIN"
       ).length;
+      console.log("✅ Usuários carregados:", mappedUsers.length); // OPCIONAL: Pra ver no console se rodou
     } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
+      console.error("Erro no fetchUsers:", error);
       toast({
-        title: "Erro",
-        description: "Falha ao carregar usuários. Tente novamente.",
+        title: "Erro ao carregar usuários",
         variant: "destructive",
       });
     } finally {
@@ -173,15 +150,18 @@ const AdminDashboard = () => {
 
   // --- Effects ---
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (token) {
-      setIsAuthenticated(true);
-      fetchUsers(); // Chama fetchUsers só se houver token
+      // Só se tem token (após login)
+      fetchUsers(); // Roda automático na abertura da página
     }
+
+    // Parte das atividades (mantém se quiser, ou remova)
     const savedActivities = localStorage.getItem("recentActivities");
-    if (savedActivities) setRecentActivities(JSON.parse(savedActivities));
-    setSystemStatus([]); // Dados fictícios ou fetch separado se dinâmico
-  }, []);
+    if (savedActivities) {
+      setRecentActivities(JSON.parse(savedActivities));
+    }
+    setSystemStatus([]); // Ou carrega de API se precisar
+  }, [token]); // SÓ [token]: Roda no mount ou se token mudar (ex: logout recarrega)
 
   useEffect(() => {
     localStorage.setItem("recentActivities", JSON.stringify(recentActivities.slice(-10)));

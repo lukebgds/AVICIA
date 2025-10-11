@@ -1,23 +1,32 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
+/**
+ * Hook de proteção de rotas.
+ * 
+ * Impede o acesso a páginas sem token de autenticação,
+ * redirecionando automaticamente para a tela de login apropriada.
+ */
 export function useAuthGuard() {
+  const { token } = useAuth();            // Pega o token do contexto global
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) {
-      const loginPath = window.location.pathname.includes("/admin")
-        ? "/admin"
-        : "/login";
+      const isAdminRoute = window.location.pathname.includes("/admin");
+      const redirectPath = isAdminRoute ? "/admin" : "/login";
+
       toast({
         title: "Acesso restrito",
-        description: "Faça login para continuar",
+        description: "Faça login para continuar.",
         variant: "destructive",
       });
-      navigate(loginPath);
+
+      // Redireciona o usuário e substitui o histórico
+      navigate(redirectPath, { replace: true });
     }
-  }, [navigate]);
+  }, [token, navigate, toast]);
 }

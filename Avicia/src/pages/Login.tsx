@@ -7,12 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Lock, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
   const [loginData, setLoginData] = useState({ cpf: "", senha: "" });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -24,17 +26,20 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await api.loginPaciente({
+      const resultado = await api.loginPaciente({
         cpf: loginData.cpf,
         senha: loginData.senha,
       });
 
+      setToken(resultado.accessToken);
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao AVICIA",
       });
 
-      navigate("/paciente/home");
+      setTimeout(() => {
+        navigate("/paciente/home", { replace: true });
+      }, 0);
     } catch (error: any) {
       toast({
         title: "Erro no login",

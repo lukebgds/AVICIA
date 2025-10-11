@@ -135,12 +135,10 @@ const apiFetch = async <T>(
       throw new Error(errorMessage || errorData.message);
     }
 
-    // Lidar com 204 No Content
     if (response.status === 204) {
-      return undefined as T; // Retorna undefined para respostas sem corpo
+      return undefined as T;
     }
 
-    // Verificar se a resposta é JSON
     const contentType = response.headers.get("Content-Type");
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
@@ -148,7 +146,6 @@ const apiFetch = async <T>(
       return data as T;
     }
 
-    // Para outros tipos de conteúdo, retornar undefined
     return undefined as T;
   } catch (error) {
     console.error(`❌🚀 Erro na requisição: ${endpoint}`, error);
@@ -253,8 +250,6 @@ export const api = {
       false,
       "CPF ou senha incorretos"
     );
-    localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login paciente bem-sucedido:", resultado);
     return resultado;
   },
@@ -267,8 +262,6 @@ export const api = {
       false,
       "Nome ou senha incorretos"
     );
-    localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login admin bem-sucedido:", resultado);
     return resultado;
   },

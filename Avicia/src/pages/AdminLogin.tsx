@@ -7,12 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { useAuth } from "@/context/AuthContext";
 
 const AdminLogin = () => {
   const [loginData, setLoginData] = useState({ nome: "", senha: "" });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -24,17 +26,20 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      await api.loginAdmin({
+      const resultado = await api.loginAdmin({
         nome: loginData.nome,
         senha: loginData.senha,
       });
 
+      setToken(resultado.accessToken);
       toast({
-        title: "Acesso administrativo autorizado",
-        description: "Bem-vindo ao painel AVICIA Admin",
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo ao AVICIA",
       });
 
-      navigate("/admin/dashboard");
+      setTimeout(() => {
+        navigate("/admin/dashboard", { replace: true });
+      }, 0);
     } catch (error: any) {
       toast({
         title: "Erro no login",
@@ -45,7 +50,6 @@ const AdminLogin = () => {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-destructive/5 via-background to-destructive/10 flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
