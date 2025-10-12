@@ -34,11 +34,11 @@ openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out api\src
 O projeto agora é executado de forma automatizada via **Docker Compose**, que cria e inicia os containers para o **backend**, **frontend** e **banco de dados** automaticamente. Não é mais necessário instalar dependências manualmente (como Maven ou NPM), pois tudo é gerenciado pelos containers.
 
 1. Abra o **Prompt de Comando (cmd)** na pasta `docker`.
-2. Inicie os containers em modo detached (em background):
+2. Inicie os containers executando o seguinte comando:
 ```bash
 docker-compose up -d
 ```
 
-- O **backend** estará disponível em `http://localhost:8080`.
-- O **frontend** estará disponível em `http://localhost:3000`.
+- O **frontend** estará disponível em `http://localhost:8080`
+- O **backend** estará disponível em `http://localhost:9081`
 - O **banco de dados** (PostgreSQL) estará acessível internamente via Docker.
