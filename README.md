@@ -36,7 +36,7 @@ O projeto agora é executado de forma automatizada via **Docker Compose**, que c
 1. Abra o **Prompt de Comando (cmd)** na pasta `docker`.
 2. Inicie os containers executando o seguinte comando:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 - O **frontend** estará disponível em `http://localhost:8080`
