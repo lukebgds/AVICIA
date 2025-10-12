@@ -23,7 +23,6 @@ openssl genpkey -algorithm RSA -out api\src\main\resources\keys\private_key.pem 
 
 # 3. Gerar a chave pública (public_key.pem) a partir da chave privada
 openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out api\src\main\resources\keys\public_key.pem
-
 ```
 
 **Nota:** As chaves serão montadas no container do backend via Docker Compose. Certifique-se de que elas estejam geradas antes de prosseguir.
@@ -31,7 +30,7 @@ openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out api\src
 ---
 
 ## 🚀 Guia de execução
-O projeto agora é executado de forma automatizada via **Docker Compose**, que cria e inicia os containers para o **backend**, **frontend** e **banco de dados** automaticamente. Não é mais necessário instalar dependências manualmente (como Maven ou NPM), pois tudo é gerenciado pelos containers.
+O projeto agora é executado de forma automatizada via **Docker Compose**, que cria e inicia os containers para o **backend**, **frontend** e **banco de dados** automaticamente. Não é mais necessário instalar dependências manualmente (como Maven, Node, Java ou npm), pois tudo é gerenciado pelos containers.
 
 1. Abra o **Prompt de Comando (cmd)** na pasta `docker`.
 2. Inicie os containers executando o seguinte comando:
