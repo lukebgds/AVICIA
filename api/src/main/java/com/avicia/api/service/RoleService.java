@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.avicia.api.data.dto.object.RoleDTO;
+import com.avicia.api.data.dto.request.RoleResquest;
+import com.avicia.api.data.dto.response.role.CriarRoleResponse;
+import com.avicia.api.data.dto.response.role.RoleResponse;
 import com.avicia.api.data.mapper.RoleMapper;
 import com.avicia.api.model.Role;
 import com.avicia.api.repository.RoleRepository;
@@ -21,27 +24,27 @@ public class RoleService {
     @Autowired
     private final RoleRepository roleRepository;
     
-    public RoleDTO criar(RoleDTO dto) {
+    public CriarRoleResponse criar(RoleResquest dto) {
 
         Role role = RoleMapper.toEntity(dto);
         Role salvo = roleRepository.save(role);
         
-        return RoleMapper.toDTO(salvo);
+        return RoleMapper.toCriarResponseDTO(salvo);
     }
 
-    public List<RoleDTO> listarTodos() {
+    public List<RoleResponse> listarTodos() {
 
         return roleRepository.findAll()
                 .stream()
-                .map(RoleMapper::toDTO)
+                .map(RoleMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<RoleDTO> buscarPorNome(String nome) {
-        return roleRepository.findByNome(nome).map(RoleMapper::toDTO);
+    public Optional<RoleResponse> buscarPorNome(String nome) {
+        return roleRepository.findByNome(nome).map(RoleMapper::toResponseDTO);
     }
 
-    public Optional<RoleDTO> atualizar(String nome, RoleDTO dto) {
+    public Optional<RoleResponse> atualizar(String nome, RoleDTO dto) {
         
         return roleRepository.findByNome(nome).map(role -> {
             role.setNome(dto.getNome());
@@ -49,7 +52,7 @@ public class RoleService {
             role.setPermissoes(dto.getPermissoes());
 
             Role atualizado = roleRepository.save(role);
-            return RoleMapper.toDTO(atualizado);
+            return RoleMapper.toResponseDTO(atualizado);
         });
     }
 

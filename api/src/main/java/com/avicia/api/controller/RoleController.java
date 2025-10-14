@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.object.RoleDTO;
+import com.avicia.api.data.dto.request.RoleResquest;
+import com.avicia.api.data.dto.response.role.CriarRoleResponse;
+import com.avicia.api.data.dto.response.role.RoleResponse;
 import com.avicia.api.service.RoleService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,17 +29,17 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping // localhost:9081/api/roles
-    public ResponseEntity<RoleDTO> criar(@RequestBody RoleDTO dto) {
+    public ResponseEntity<CriarRoleResponse> criar(@RequestBody RoleResquest dto) {
         return ResponseEntity.ok(roleService.criar(dto));
     }
 
     @GetMapping // localhost:9081/api/roles
-    public ResponseEntity<List<RoleDTO>> listarTodos() {
+    public ResponseEntity<List<RoleResponse>> listarTodos() {
         return ResponseEntity.ok(roleService.listarTodos());
     }
 
     @GetMapping("/{nome}") // localhost:9081/api/roles/{nome}
-    public ResponseEntity<RoleDTO> buscarPorNome(@PathVariable String nome) {
+    public ResponseEntity<RoleResponse> buscarPorNome(@PathVariable String nome) {
         
         return roleService.buscarPorNome(nome)
                 .map(ResponseEntity::ok)
@@ -44,7 +47,7 @@ public class RoleController {
     }
 
     @PutMapping("/{nome}") // localhost:9081/api/roles/{nome}
-    public ResponseEntity<RoleDTO> atualizar(@PathVariable String nome, @RequestBody RoleDTO dto) {
+    public ResponseEntity<RoleResponse> atualizar(@PathVariable String nome, @RequestBody RoleDTO dto) {
         
         return roleService.atualizar(nome, dto)
                 .map(ResponseEntity::ok)

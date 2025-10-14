@@ -1,11 +1,32 @@
 package com.avicia.api.data.mapper;
 
 
-import com.avicia.api.data.dto.request.UsuarioRequest;
-import com.avicia.api.data.dto.response.UsuarioResponse;
+import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
+import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
+import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
 import com.avicia.api.model.Usuario;
 
 public class UsuarioMapper {
+
+    public static Usuario toEntity(UsuarioRequest dto){
+
+        Usuario usuario = new Usuario();
+
+        usuario.setNome(dto.getNome());
+        usuario.setCpf(dto.getCpf());
+        usuario.setDataNascimento(dto.getDataNascimento());
+        usuario.setSexo(dto.getSexo());
+        usuario.setEstadoCivil(dto.getEstadoCivil());
+        usuario.setEmail(dto.getEmail());
+        usuario.setTelefone(dto.getTelefone());
+        usuario.setEndereco(dto.getEndereco());
+        usuario.setMfaHabilitado(dto.getMfaHabilitado());
+        usuario.setDataCriacao(dto.getDataCriacao());
+
+        return usuario;
+    }
+
+    
 
     public static UsuarioResponse toResponseDTO(Usuario usuario) {
 
@@ -15,10 +36,13 @@ public class UsuarioMapper {
 
         dto.setIdUsuario(usuario.getIdUsuario());
         dto.setNome(usuario.getNome());
-        dto.setSobrenome(usuario.getSobrenome());
         dto.setCpf(usuario.getCpf());
+        dto.setDataNascimento(usuario.getDataNascimento());
+        dto.setSexo(usuario.getSexo());
+        dto.setEstadoCivil(usuario.getEstadoCivil());
         dto.setEmail(usuario.getEmail());
         dto.setTelefone(usuario.getTelefone());
+        dto.setEndereco(usuario.getEndereco());
         dto.setAtivo(usuario.getAtivo());
         dto.setMfaHabilitado(usuario.getMfaHabilitado());
         dto.setDataCriacao(usuario.getDataCriacao());
@@ -27,20 +51,11 @@ public class UsuarioMapper {
         return dto;
     }
 
-    public static Usuario toEntity(UsuarioRequest dto){
-
-        Usuario usuario = new Usuario();
-
-        usuario.setNome(dto.getNome());
-        usuario.setSobrenome(dto.getSobrenome());
-        usuario.setCpf(dto.getCpf());
-        usuario.setEmail(dto.getEmail());
-        usuario.setTelefone(dto.getTelefone());
-        usuario.setAtivo(dto.getAtivo());
-        usuario.setMfaHabilitado(dto.getMfaHabilitado());
-        usuario.setDataCriacao(dto.getDataCriacao());
-
-        return usuario;
+    public static CriarUsuarioResponse toCriarResponseDTO(Usuario usuario) {
+        if (usuario == null) return null;
+        CriarUsuarioResponse dto = new CriarUsuarioResponse();
+        dto.setIdUsuario(usuario.getIdUsuario());
+        return dto;
     }
 
 }

@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.request.AlterarSenhaRequest;
-import com.avicia.api.data.dto.request.UsuarioRequest;
-import com.avicia.api.data.dto.response.UsuarioResponse;
+import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
+import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
+import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
 import com.avicia.api.service.UsuarioService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class UsuarioController {
     private UsuarioService usuarioService;
     
     @PostMapping("/cadastro")// localhost:9081/api/usuarios
-    public ResponseEntity<UsuarioResponse> criar(@RequestBody UsuarioRequest dto) {
+    public ResponseEntity<CriarUsuarioResponse> criar(@RequestBody UsuarioRequest dto) {
         return ResponseEntity.ok(usuarioService.criar(dto));
     }
 

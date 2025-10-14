@@ -1,7 +1,7 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.request.PacienteRequest;
-import com.avicia.api.data.dto.response.PacienteResponse;
+import com.avicia.api.data.dto.request.paciente.PacienteRequest;
+import com.avicia.api.data.dto.response.paciente.PacienteResponse;
 import com.avicia.api.model.Paciente;
 
 public class PacienteMapper {
@@ -14,11 +14,7 @@ public class PacienteMapper {
 
         dto.setIdPaciente(paciente.getIdPaciente());
         dto.setUsuario(UsuarioMapper.toResponseDTO(paciente.getUsuario()));
-        dto.setDataNascimento(paciente.getDataNascimento());
-        dto.setSexo(paciente.getSexo());
-        dto.setEstadoCivil(paciente.getEstadoCivil());
         dto.setProfissao(paciente.getProfissao());
-        dto.setEndereco(paciente.getEndereco());
         dto.setPreferenciaContato(paciente.getPreferenciaContato());
 
         return dto;
@@ -30,11 +26,7 @@ public class PacienteMapper {
 
         Paciente paciente = new Paciente();
         
-        paciente.setDataNascimento(dto.getDataNascimento());
-        paciente.setSexo(dto.getSexo());
-        paciente.setEstadoCivil(dto.getEstadoCivil());
         paciente.setProfissao(dto.getProfissao());
-        paciente.setEndereco(dto.getEndereco());
         paciente.setPreferenciaContato(dto.getPreferenciaContato());
 
         return paciente;

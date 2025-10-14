@@ -3,9 +3,7 @@ package com.avicia.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,17 +24,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LoginController {
 
-    @Autowired
     private final UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-
-    @Autowired
     private final LoginService loginService;
-
-    @Autowired
     private final TokenService tokenService;
+    private final Argon2PasswordEncoder passwordEncoder;
 
     @PostMapping("/login") // localhost:9081/api/login
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
@@ -51,7 +42,7 @@ public class LoginController {
         roleDTO.setDescricao(roleEntity.getDescricao());
         roleDTO.setPermissoes(roleEntity.getPermissoes());
 
-        if (usuario.isEmpty() || !loginService.loginCorreto(loginRequest, bCryptPasswordEncoder)) {
+        if (usuario.isEmpty() || !loginService.loginCorreto(loginRequest, passwordEncoder)) {
             throw new BadCredentialsException("user or password is invalid!");
         }
 
@@ -74,7 +65,7 @@ public class LoginController {
         roleDTO.setDescricao(roleEntity.getDescricao());
         roleDTO.setPermissoes(roleEntity.getPermissoes());
 
-        if (usuario.isEmpty() || !loginService.loginAdminCorreto(loginAdminRequest, bCryptPasswordEncoder)) {
+        if (usuario.isEmpty() || !loginService.loginAdminCorreto(loginAdminRequest, passwordEncoder)) {
             throw new BadCredentialsException("user or password is invalid!");
         }
 

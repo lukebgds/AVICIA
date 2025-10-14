@@ -9,12 +9,16 @@ VALUES (
     'PACIENTE',
     '{
         "sistema": "N",
-        "usuarios": "N",
-        "pacientes": "N",
-        "consultas": "RW",
+        "role": "N",
+        "usuario": "N",
+        "paciente": "N",
+        "profissionalSaude": "N",
+        "funcionario": "N",
         "exames": "R",
         "financeiro": "R",
-        "relatorios": "R"
+        "relatorio": "R",
+        "consulta": "CRD",
+        "medicamento": "R"
     }'::jsonb,
     'Paciente comum'
 );
@@ -29,12 +33,17 @@ VALUES (
     101,
     'SYSTEM.ADMIN',
     '{
-        "sistema": "RW",
-        "roles": "RW",
-        "usuario": "RW",
-        "funcionario": "RW",
-        "paciente": "RW",
-        "profissional_saude": "RW"
+        "sistema": "CRUD",
+        "role": "CRUD",
+        "usuario": "CRUD",
+        "paciente": "CRUD",
+        "profissionalSaude": "CRUD",
+        "funcionario": "CRUD",
+        "exames": "N",
+        "financeiro": "N",
+        "relatorio": "CRUD",
+        "consulta": "N",
+        "medicamento": "N"
     }'::jsonb,
     'Admin total sistema'
 );
@@ -49,13 +58,17 @@ VALUES (
     501,
     'FUNCIONARIO',
     '{
-        "sistema": "N",
-        "usuarios": "R",
-        "pacientes": "RW",
-        "consultas": "RW",
-        "exames": "RW",
-        "financeiro": "RW",
-        "relatorios": "R"
+        "sistema": "R",
+        "role": "R",
+        "usuario": "R",
+        "paciente": "R",
+        "profissionalSaude": "R",
+        "funcionario": "R",
+        "exames": "N",
+        "financeiro": "R",
+        "relatorio": "R",
+        "consulta": "N",
+        "medicamento": "N"
     }'::jsonb,
     'Funcionário operacional'
 );
@@ -71,38 +84,17 @@ VALUES (
     'PROFISSIONAL.SAUDE',
     '{
         "sistema": "N",
-        "usuarios": "R",
-        "pacientes": "RW",
-        "consultas": "RW",
-        "exames": "RW",
-        "financeiro": "N",
-        "relatorios": "R"
+        "role": "N",
+        "usuario": "N",
+        "paciente": "N",
+        "profissionalSaude": "N",
+        "funcionario": "N",
+        "exames": "CRUD",
+        "financeiro": "R",
+        "relatorio": "R",
+        "consulta": "CRUD",
+        "medicamento": "CRUD"
     }'::jsonb,
     'Profissional de saúde (médico/enfermeiro)'
 );
 
-INSERT INTO seguranca.usuario (
-    id_usuario,
-    id_role,
-    nome,
-    sobrenome,
-    cpf,
-    email,
-    telefone,
-    senha_hash,
-    data_criacao,
-    mfa_habilitado,
-    ativo
-) VALUES (
-    1,
-    101,
-    'system.admin',
-    'admin',
-    '000.000.000-00',
-    'admin@admin.com',
-    '00000000000',
-    'Avicia@2025',
-    '2025-09-27',
-    false,
-    true
-);

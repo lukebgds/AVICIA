@@ -1,5 +1,7 @@
 package com.avicia.api.data.dto.response;
 
+import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
+
 import lombok.Data;
 
 @Data

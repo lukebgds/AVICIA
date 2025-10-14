@@ -1,7 +1,7 @@
 package com.avicia.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.avicia.api.data.dto.request.LoginAdminRequest;
@@ -18,7 +18,7 @@ public class LoginService {
     @Autowired
     private final UsuarioRepository usuarioRepository;
 
-    public boolean loginCorreto(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
+    public boolean loginCorreto(LoginRequest loginRequest, Argon2PasswordEncoder passwordEncoder) {
         
         Usuario usuario = usuarioRepository.findByCpf(loginRequest.cpf())
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -26,12 +26,12 @@ public class LoginService {
         return passwordEncoder.matches(loginRequest.senha(), usuario.getSenhaHash());
     }
 
-    public boolean loginAdminCorreto(LoginAdminRequest loginAdminRequest, PasswordEncoder passwordEncoder) {
+    public boolean loginAdminCorreto(LoginAdminRequest loginAdminRequest, Argon2PasswordEncoder passwordEncoder) {
         
         Usuario usuario = usuarioRepository.findByNome(loginAdminRequest.nome())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        return  loginAdminRequest.senha().equals(usuario.getSenhaHash());
+        return  passwordEncoder.matches(loginAdminRequest.senha(), usuario.getSenhaHash());
     }
 
 }

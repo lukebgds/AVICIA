@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.request.PacienteRequest;
-import com.avicia.api.data.dto.response.PacienteResponse;
+import com.avicia.api.data.dto.request.paciente.PacienteRequest;
+import com.avicia.api.data.dto.response.paciente.PacienteResponse;
 import com.avicia.api.data.mapper.PacienteMapper;
 import com.avicia.api.model.Paciente;
 import com.avicia.api.model.Usuario;

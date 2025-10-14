@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.request.PacienteRequest;
-import com.avicia.api.data.dto.response.PacienteResponse;
+import com.avicia.api.data.dto.request.paciente.PacienteRequest;
+import com.avicia.api.data.dto.response.paciente.PacienteResponse;
 import com.avicia.api.service.PacienteService;
 
 import lombok.RequiredArgsConstructor;

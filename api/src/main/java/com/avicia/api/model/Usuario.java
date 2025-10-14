@@ -2,7 +2,6 @@ package com.avicia.api.model;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -31,17 +30,27 @@ public class Usuario {
     @Column(name = "nome", nullable = false)
     private String nome;
 
-    @Column(name = "sobrenome", nullable = false)
-    private String sobrenome;
-
     @Column(name = "cpf", nullable = false, unique = true)
     private String cpf;
+
+    @Column(name = "data_nascimento", nullable = false)
+    private LocalDate dataNascimento;
+
+    @Column(name = "sexo", nullable = false)
+    private String sexo;
+
+    @Column(name = "estado_civil", nullable = false)
+    private String estadoCivil;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "telefone", nullable = false, unique = true)
     private String telefone;
+
+    @Column(name = "endereco", nullable = false)
+    private String endereco;
+
 
     @Column(name = "senha_hash", nullable = false, unique = true)
     private String senhaHash;
