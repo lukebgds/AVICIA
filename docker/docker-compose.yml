@@ -33,7 +33,7 @@ services:
       SPRING_JPA_SHOW_SQL: "true"
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
-      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true" 
     volumes:
       - ../api:/app
     ports:
