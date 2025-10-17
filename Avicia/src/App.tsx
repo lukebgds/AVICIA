@@ -11,6 +11,7 @@ import PatientHome from "./pages/PacienteHome";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import RoleRegistration from "./pages/admin/RoleRegistration";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/role-registration" element={<RoleRegistration />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
