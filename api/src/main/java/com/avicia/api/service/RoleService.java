@@ -4,15 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.object.RoleDTO;
-import com.avicia.api.data.dto.request.RoleResquest;
+import com.avicia.api.data.dto.request.role.RoleRequest;
 import com.avicia.api.data.dto.response.role.CriarRoleResponse;
 import com.avicia.api.data.dto.response.role.RoleResponse;
 import com.avicia.api.data.mapper.RoleMapper;
-import com.avicia.api.model.Role;
+import com.avicia.api.data.model.Role;
 import com.avicia.api.repository.RoleRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,12 +19,38 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoleService {
 
-    @Autowired
     private final RoleRepository roleRepository;
     
-    public CriarRoleResponse criar(RoleResquest dto) {
+    public CriarRoleResponse criar(RoleRequest dto) {
 
-        Role role = RoleMapper.toEntity(dto);
+        // Verifica se a role existe pelo ID
+        Role findRole = roleRepository.findById(dto.getIdTipoRole())
+            .orElseThrow(() -> new RuntimeException("Role não encontrada"));
+
+        Integer idRoleBase = findRole.getIdRole();
+
+        // Determina a faixa com base no ID da role base
+        int faixaMin = (idRoleBase / 100) * 100 + 1;
+        int faixaMax = faixaMin + 98;
+
+        // Verifica se a faixa é válida
+        if (!isFaixaValida(faixaMin, faixaMax)) {
+            throw new IllegalArgumentException(
+                "Faixa de IDs inválida. Permitidas apenas: " +
+                "[101–199], [301–399], [501–599], [701–799]."
+            );
+        }
+
+        // Encontra o próximo ID disponível dentro da faixa
+        Integer idRole = findNextAvailableId(faixaMin, faixaMax);
+
+        if (idRole == null) {
+            throw new IllegalStateException(
+                "Não há IDs disponíveis na faixa " + faixaMin + "–" + faixaMax
+            );
+        }
+
+        Role role = RoleMapper.toEntity(dto, idRole);
         Role salvo = roleRepository.save(role);
         
         return RoleMapper.toCriarResponseDTO(salvo);
@@ -44,7 +68,7 @@ public class RoleService {
         return roleRepository.findByNome(nome).map(RoleMapper::toResponseDTO);
     }
 
-    public Optional<RoleResponse> atualizar(String nome, RoleDTO dto) {
+    public Optional<RoleResponse> atualizar(String nome, RoleRequest dto) {
         
         return roleRepository.findByNome(nome).map(role -> {
             role.setNome(dto.getNome());
@@ -62,6 +86,26 @@ public class RoleService {
             roleRepository.delete(role);
             return true;
         }).orElse(false);
+    }
+
+    // ================= MÉTODOS AUXILIARES ================= //
+    
+    // Verifica se a faixa é uma das permitidas.
+    private boolean isFaixaValida(int faixaMin, int faixaMax) {
+        return (faixaMin == 101 && faixaMax == 199)
+            || (faixaMin == 301 && faixaMax == 399)
+            || (faixaMin == 501 && faixaMax == 599)
+            || (faixaMin == 701 && faixaMax == 799);
+    }
+
+    // Procura o próximo ID livre dentro da faixa.
+    private Integer findNextAvailableId(int faixaMin, int faixaMax) {
+        for (int id = faixaMin; id <= faixaMax; id++) {
+            if (!roleRepository.existsById(id)) {
+                return id;
+            }
+        }
+        return null; // Nenhum ID disponível
     }
 
 }

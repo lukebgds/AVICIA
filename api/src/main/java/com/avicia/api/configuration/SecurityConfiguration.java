@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.avicia.api.util.CustomJwtConverter;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -50,17 +51,10 @@ public class SecurityConfiguration {
                                                             // Login Admin
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
 
-                                                            // TESTE: apenas quem tem LOGS_READ pode acessar GET /api/logs
-                                                            // .requestMatchers(HttpMethod.GET, "/api/logs").hasAuthority("LOGS_READ")
-                                                            // .requestMatchers(HttpMethod.POST, "/api/logs").hasAuthority("LOGS_WRITE")
-
-                                                            // Teste do Token
-                                                            .requestMatchers(HttpMethod.GET, "/api/teste-jwt").permitAll()
-
-                                                            .anyRequest().permitAll()
+                                                            .anyRequest().authenticated()
             )
             .cors(Customizer.withDefaults())
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(new CustomJwtConverter())))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(csrf -> csrf.disable());
 

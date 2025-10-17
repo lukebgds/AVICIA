@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +12,8 @@ import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
 import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
 import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
 import com.avicia.api.data.mapper.UsuarioMapper;
-import com.avicia.api.model.Role;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.model.Role;
+import com.avicia.api.data.model.Usuario;
 import com.avicia.api.repository.RoleRepository;
 import com.avicia.api.repository.UsuarioRepository;
 
@@ -27,6 +26,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final Argon2PasswordEncoder passwordEncoder;
+    private final SystemLogService systemLogService;
 
     public CriarUsuarioResponse criar(UsuarioRequest dto) {
         
@@ -56,6 +56,14 @@ public class UsuarioService {
         usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
 
         Usuario salvo = usuarioRepository.save(usuario);
+
+        // Registar o log (Criação)
+        systemLogService.registrarCriacao(
+                salvo.getIdUsuario(),
+                "Usuario",
+                "Usuário criado com ID " + salvo.getIdUsuario()
+        );
+
         return UsuarioMapper.toCriarResponseDTO(salvo);
     }
 
@@ -77,7 +85,16 @@ public class UsuarioService {
             Usuario usuario = UsuarioMapper.toEntity(dto);
             usuario.setIdUsuario(existing.getIdUsuario());
             usuario.setAtivo(dto.getAtivo());
-            return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuario));
+
+            Usuario atualizado = usuarioRepository.save(usuario);
+
+            // Resgistro de log (Modificação)
+            systemLogService.registrarAtualizacao(
+                    atualizado.getIdUsuario(),
+                    "Usuario",
+                    "Dados do usuário com CPF " + cpf + " foram atualizados"
+            );
+            return UsuarioMapper.toResponseDTO(atualizado);
         });
     }
 
@@ -86,6 +103,14 @@ public class UsuarioService {
             
                 // Verifica se a senha atual está correta
                 if(!passwordEncoder.matches(senhaAtual, usuario.getSenhaHash())) {
+
+                    // Log de erro (senha incorreta)
+                    systemLogService.registrarErro(
+                        usuario.getIdUsuario(),
+                        "Usuario",
+                        "Tentativa de alteração de senha falhou — senha atual incorreta"
+                    );
+
                     throw new RuntimeException("Senha atual incorreta!");
                 }
 
@@ -94,6 +119,13 @@ public class UsuarioService {
 
                 Usuario atualizado = usuarioRepository.save(usuario);
 
+                // Resgistro de log (Atualização de senha)
+                systemLogService.registrarAtualizacao(
+                    atualizado.getIdUsuario(),
+                    "Usuario",
+                    "Senha alterada com sucesso"
+                );
+
                 return UsuarioMapper.toResponseDTO(atualizado);
         });
     }
@@ -101,6 +133,14 @@ public class UsuarioService {
     public boolean deletar(Integer idUsuario) {
         return usuarioRepository.findByIdUsuario(idUsuario).map(usuario -> {
             usuarioRepository.delete(usuario);
+
+            // Registro de log (Exclusão)
+            systemLogService.registrarExclusao(
+                    idUsuario,
+                    "Usuario",
+                    "Usuário com ID " + idUsuario + " foi deletado"
+            );
+
             return true;
         }).orElse(false);
     }

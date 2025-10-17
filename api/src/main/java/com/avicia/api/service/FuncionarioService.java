@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.request.FuncionarioRequest;
-import com.avicia.api.data.dto.response.FuncionarioResponse;
+import com.avicia.api.data.dto.request.funcionario.FuncionarioRequest;
+import com.avicia.api.data.dto.response.funcionario.FuncionarioResponse;
 import com.avicia.api.data.mapper.FuncionarioMapper;
-import com.avicia.api.model.Funcionario;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.model.Funcionario;
+import com.avicia.api.data.model.Usuario;
 import com.avicia.api.repository.FuncionarioRepository;
 import com.avicia.api.repository.UsuarioRepository;
 
@@ -43,15 +43,15 @@ public class FuncionarioService {
         // Pega os 3 primeiros dígitos
         String prefixo = idUsuarioStr.substring(0, 3);
 
-        // Número aleatório de 3 dígitos
-        String numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+        // Número aleatório de 6 dígitos
+        String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
 
         // Concatena e converte para Integer
         Integer idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
 
         // Garante unicidade
         while (funcionarioRepository.existsById(idFuncionario)) {
-            numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+            numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
         }
 		

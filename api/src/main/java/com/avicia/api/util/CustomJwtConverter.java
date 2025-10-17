@@ -1,4 +1,4 @@
-package com.avicia.api.security;
+package com.avicia.api.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,17 +13,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.databind.util.Converter;
+import org.springframework.core.convert.converter.Converter;
 
 public class CustomJwtConverter implements Converter<Jwt, AbstractAuthenticationToken>{
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
-        
         return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
     }
 
@@ -36,33 +32,27 @@ public class CustomJwtConverter implements Converter<Jwt, AbstractAuthentication
 
         return permissoes.entrySet().stream()
                 .flatMap(entry -> {
-                    String recurso = entry.getKey().toUpperCase(); // logs -> LOGS
-                    String valor = entry.getValue(); // R, W, RW
+                    String recurso = entry.getKey().toUpperCase();
+                    String valor = entry.getValue(); 
 
                     List<GrantedAuthority> auths = new ArrayList<>();
 
+                    if (valor.contains("C")) {
+                        auths.add(new SimpleGrantedAuthority(recurso + "_CREATE"));
+                    }
                     if (valor.contains("R")) {
                         auths.add(new SimpleGrantedAuthority(recurso + "_READ"));
                     }
-                    if (valor.contains("W")) {
-                        auths.add(new SimpleGrantedAuthority(recurso + "_WRITE"));
+                    if (valor.contains("U")) {
+                        auths.add(new SimpleGrantedAuthority(recurso + "_UPDATE"));
+                    }
+                    if (valor.contains("D")) {
+                        auths.add(new SimpleGrantedAuthority(recurso + "_DELETE"));
                     }
 
                     return auths.stream();
                 })
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    public JavaType getInputType(TypeFactory typeFactory) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getInputType'");
-    }
-
-    @Override
-    public JavaType getOutputType(TypeFactory typeFactory) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getOutputType'");
     }
 
 }

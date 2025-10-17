@@ -1,15 +1,15 @@
-package com.avicia.api.data.dto.object;
-
+package com.avicia.api.data.dto.request.role;
 
 import java.util.Map;
 
 import lombok.Data;
 
 @Data
-public class RoleDTO {
+public class TokenRoleRequest {
 
     private Integer idRole;
     private String nome;
+    private Integer idTipoRole;
     private String descricao;
     private Map<String, Object> permissoes;
 

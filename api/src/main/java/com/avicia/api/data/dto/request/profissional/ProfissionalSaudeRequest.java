@@ -1,4 +1,4 @@
-package com.avicia.api.data.dto.request;
+package com.avicia.api.data.dto.request.profissional;
 
 import lombok.Data;
 

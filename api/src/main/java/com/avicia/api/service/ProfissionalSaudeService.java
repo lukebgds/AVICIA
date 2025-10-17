@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.request.ProfissionalSaudeRequest;
-import com.avicia.api.data.dto.response.ProfissionalSaudeResponse;
+import com.avicia.api.data.dto.request.profissional.ProfissionalSaudeRequest;
+import com.avicia.api.data.dto.response.profissional.ProfissionalSaudeResponse;
 import com.avicia.api.data.mapper.ProfissionalSaudeMapper;
-import com.avicia.api.model.ProfissionalSaude;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.model.ProfissionalSaude;
+import com.avicia.api.data.model.Usuario;
 import com.avicia.api.repository.ProfissionalSaudeRepository;
 import com.avicia.api.repository.UsuarioRepository;
 
@@ -44,14 +44,14 @@ public class ProfissionalSaudeService {
         String prefixo = idUsuarioStr.substring(0, 3);
 
         // Número aleatório de 3 dígitos
-        String numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+        String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
 
         // Concatena e converte para Integer
         Integer idProfissional = Integer.parseInt(prefixo + numeroAleatorio);
 		
 		// Garante unicidade
         while (profissionalRepository.existsById(idProfissional)) {
-            numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+            numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             idProfissional = Integer.parseInt(prefixo + numeroAleatorio);
         }
 		

@@ -2,7 +2,6 @@ package com.avicia.api.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PacienteController {
 
-    @Autowired
     private final PacienteService pacienteService;
 
     @GetMapping
@@ -39,7 +37,7 @@ public class PacienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/cadastro") // localhost:9081/api/pacientes
+    @PostMapping("/cadastro") // localhost:9081/api/pacientes/cadastro
     public PacienteResponse criar(@RequestBody PacienteRequest dto) {
         return pacienteService.criar(dto);
     }

@@ -1,6 +1,6 @@
-package com.avicia.api.model;
+package com.avicia.api.data.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.avicia.api.data.enumerate.TipoSystemLog;
 
@@ -8,6 +8,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -24,6 +26,7 @@ import lombok.Setter;
 public class SystemLog {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id_log", nullable = false)
     private Integer idLog;
 
@@ -39,7 +42,7 @@ public class SystemLog {
     private String acao;
 
     @Column(name = "data_hora")
-    private LocalDate dataHora;
+    private LocalDateTime dataHora;
 
     @Column(name = "entidade_afetada")
     private String entidadeAfetada;

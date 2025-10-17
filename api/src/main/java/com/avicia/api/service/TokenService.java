@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.object.RoleDTO;
+import com.avicia.api.data.dto.request.role.TokenRoleRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ public class TokenService {
     @Autowired
     private final JwtEncoder jwtEncoder;
 
-    public String generate(String identity, RoleDTO role) {
+    public String generate(String identity, TokenRoleRequest role) {
 
         var claims = JwtClaimsSet.builder()
                 .issuer("avicia.api")

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import com.avicia.api.data.dto.request.paciente.PacienteRequest;
 import com.avicia.api.data.dto.response.paciente.PacienteResponse;
 import com.avicia.api.data.mapper.PacienteMapper;
-import com.avicia.api.model.Paciente;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.model.Paciente;
+import com.avicia.api.data.model.Usuario;
 import com.avicia.api.repository.PacienteRepository;
 import com.avicia.api.repository.UsuarioRepository;
 
@@ -64,14 +64,14 @@ public class PacienteService {
         String prefixo = idUsuarioStr.substring(0, 3);
 
         // Número aleatório de 3 dígitos
-        String numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+        String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
 
         // Concatena e converte para Integer
         Integer idPaciente = Integer.parseInt(prefixo + numeroAleatorio);
 
         // Garante unicidade
         while (pacienteRepository.existsById(idPaciente)) {
-            numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
+            numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             idPaciente = Integer.parseInt(prefixo + numeroAleatorio);
         }
 

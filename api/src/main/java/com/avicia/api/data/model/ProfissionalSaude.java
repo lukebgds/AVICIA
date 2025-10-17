@@ -1,4 +1,4 @@
-package com.avicia.api.model;
+package com.avicia.api.data.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.request.AlterarSenhaRequest;
+import com.avicia.api.data.dto.request.senha.AlterarSenhaRequest;
 import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
 import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
 import com.avicia.api.data.dto.response.usuario.UsuarioResponse;

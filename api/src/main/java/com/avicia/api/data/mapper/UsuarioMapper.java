@@ -4,7 +4,7 @@ package com.avicia.api.data.mapper;
 import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
 import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
 import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.model.Usuario;
 
 public class UsuarioMapper {
 
@@ -22,6 +22,7 @@ public class UsuarioMapper {
         usuario.setEndereco(dto.getEndereco());
         usuario.setMfaHabilitado(dto.getMfaHabilitado());
         usuario.setDataCriacao(dto.getDataCriacao());
+        usuario.setAtivo(dto.getAtivo());
 
         return usuario;
     }

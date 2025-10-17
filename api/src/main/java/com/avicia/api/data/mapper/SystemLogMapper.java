@@ -1,8 +1,8 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.request.SystemLogRequest;
-import com.avicia.api.data.dto.response.SystemLogResponse;
-import com.avicia.api.model.SystemLog;
+import com.avicia.api.data.dto.request.system.SystemLogRequest;
+import com.avicia.api.data.dto.response.system.SystemLogResponse;
+import com.avicia.api.data.model.SystemLog;
 
 public class SystemLogMapper {
 
@@ -26,6 +26,14 @@ public class SystemLogMapper {
 		if (systemLog == null) return null;
 
 		SystemLogResponse dto = new SystemLogResponse();
+
+		dto.setIdLog(systemLog.getIdLog());
+		dto.setIdUsuario(systemLog.getIdUsuario().getIdUsuario());
+		dto.setTipoLog(systemLog.getTipoLog());
+		dto.setAcao(systemLog.getAcao());
+		dto.setDataHora(systemLog.getDataHora());
+		dto.setEntidadeAfetada(systemLog.getEntidadeAfetada());
+		dto.setDetalhes(systemLog.getDetalhes());
 
 		return dto;
 	}

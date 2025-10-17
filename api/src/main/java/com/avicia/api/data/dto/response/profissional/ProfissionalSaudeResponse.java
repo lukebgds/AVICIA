@@ -1,4 +1,4 @@
-package com.avicia.api.data.dto.response;
+package com.avicia.api.data.dto.response.profissional;
 
 import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
 

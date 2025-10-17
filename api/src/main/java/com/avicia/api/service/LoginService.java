@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.avicia.api.data.dto.request.LoginAdminRequest;
-import com.avicia.api.data.dto.request.LoginRequest;
-import com.avicia.api.model.Usuario;
+import com.avicia.api.data.dto.request.login.LoginAdminRequest;
+import com.avicia.api.data.dto.request.login.LoginRequest;
+import com.avicia.api.data.model.Usuario;
 import com.avicia.api.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;

@@ -1,16 +1,17 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.request.RoleResquest;
+import com.avicia.api.data.dto.request.role.RoleRequest;
 import com.avicia.api.data.dto.response.role.CriarRoleResponse;
 import com.avicia.api.data.dto.response.role.RoleResponse;
-import com.avicia.api.model.Role;
+import com.avicia.api.data.model.Role;
 
 public class RoleMapper {
 
-    public static Role toEntity(RoleResquest dto) {
+    public static Role toEntity(RoleRequest dto, Integer id) {
         Role role = new Role();
-        role.setIdRole(dto.getIdRole());
+        role.setIdRole(id);
         role.setNome(dto.getNome());
+        
         role.setDescricao(dto.getDescricao());
         role.setPermissoes(dto.getPermissoes());
         return role;
