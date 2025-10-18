@@ -4,7 +4,7 @@ package com.avicia.api.data.mapper;
 import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
 import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
 import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
-import com.avicia.api.data.model.Usuario;
+import com.avicia.api.model.Usuario;
 
 public class UsuarioMapper {
 

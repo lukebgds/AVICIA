@@ -3,7 +3,7 @@ package com.avicia.api.data.mapper;
 
 import com.avicia.api.data.dto.request.funcionario.FuncionarioRequest;
 import com.avicia.api.data.dto.response.funcionario.FuncionarioResponse;
-import com.avicia.api.data.model.Funcionario;
+import com.avicia.api.model.Funcionario;
 
 
 public class FuncionarioMapper {

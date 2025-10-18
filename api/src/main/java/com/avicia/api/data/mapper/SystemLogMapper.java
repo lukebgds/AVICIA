@@ -2,7 +2,7 @@ package com.avicia.api.data.mapper;
 
 import com.avicia.api.data.dto.request.system.SystemLogRequest;
 import com.avicia.api.data.dto.response.system.SystemLogResponse;
-import com.avicia.api.data.model.SystemLog;
+import com.avicia.api.model.SystemLog;
 
 public class SystemLogMapper {
 

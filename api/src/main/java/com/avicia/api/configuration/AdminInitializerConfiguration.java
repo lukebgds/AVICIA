@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
-import com.avicia.api.data.model.Role;
-import com.avicia.api.data.model.Usuario;
+import com.avicia.api.model.Role;
+import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.RoleRepository;
 import com.avicia.api.repository.UsuarioRepository;
 

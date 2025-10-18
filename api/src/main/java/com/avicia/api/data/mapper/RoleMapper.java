@@ -3,7 +3,7 @@ package com.avicia.api.data.mapper;
 import com.avicia.api.data.dto.request.role.RoleRequest;
 import com.avicia.api.data.dto.response.role.CriarRoleResponse;
 import com.avicia.api.data.dto.response.role.RoleResponse;
-import com.avicia.api.data.model.Role;
+import com.avicia.api.model.Role;
 
 public class RoleMapper {
 

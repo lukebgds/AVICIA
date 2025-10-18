@@ -46,7 +46,7 @@ public class SecurityConfiguration {
                                                             .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/pacientes/cadastro").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
-                                                            .requestMatchers(HttpMethod.GET, "/api/usuarios").permitAll()
+                                                            // .requestMatchers(HttpMethod.GET, "/api/usuarios").permitAll()
 
                                                             // Login Admin
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()

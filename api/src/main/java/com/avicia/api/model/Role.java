@@ -1,4 +1,4 @@
-package com.avicia.api.data.model;
+package com.avicia.api.model;
 
 import java.util.List;
 import java.util.Map;

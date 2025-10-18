@@ -1,8 +1,9 @@
+
 package com.avicia.api.data.mapper;
 
 import com.avicia.api.data.dto.request.paciente.PacienteRequest;
 import com.avicia.api.data.dto.response.paciente.PacienteResponse;
-import com.avicia.api.data.model.Paciente;
+import com.avicia.api.model.Paciente;
 
 public class PacienteMapper {
 

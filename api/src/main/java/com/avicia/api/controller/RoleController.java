@@ -43,25 +43,20 @@ public class RoleController {
     @GetMapping("/{nome}") // localhost:9081/api/roles/{nome}
     @PreAuthorize("hasAuthority('ROLE_READ')")
     public ResponseEntity<RoleResponse> buscarPorNome(@PathVariable String nome) {
-        return roleService.buscarPorNome(nome)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(roleService.buscarPorNome(nome));
     }
 
     @PutMapping("/{nome}") // localhost:9081/api/roles/{nome}
     @PreAuthorize("hasAuthority('ROLE_UPDATE')")
     public ResponseEntity<RoleResponse> atualizar(@PathVariable String nome, @RequestBody RoleRequest dto) {
-        return roleService.atualizar(nome, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(roleService.atualizar(nome, dto));
     }
 
     @DeleteMapping("/{nome}") // localhost:9081/api/roles/{nome}
     @PreAuthorize("hasAuthority('ROLE_DELETE')")
     public ResponseEntity<Void> deletar(@PathVariable String nome) {
-        boolean deletado = roleService.deletar(nome);
-        return deletado ? ResponseEntity.noContent().build()
-                        : ResponseEntity.notFound().build();
+        roleService.deletar(nome);
+        return ResponseEntity.noContent().build();            
     }
 
 }

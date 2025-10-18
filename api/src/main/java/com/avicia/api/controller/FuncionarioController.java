@@ -41,28 +41,21 @@ public class FuncionarioController {
     @GetMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
     @PreAuthorize("hasAuthority('FUNCIONARIO_READ')")
     public ResponseEntity<FuncionarioResponse> buscarPorMatricula(@PathVariable String matricula) {
-
-        return funcionarioService.buscarPorMatricula(matricula)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(funcionarioService.buscarPorMatricula(matricula));
     }
 
     @PutMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
     @PreAuthorize("hasAuthority('FUNCIONARIO_UPDATE')")
     public ResponseEntity<FuncionarioResponse> atualizar(@PathVariable String matricula, @RequestBody FuncionarioRequest dto) {
-
-        return funcionarioService.atualizar(matricula, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(funcionarioService.atualizar(matricula, dto));
     }
 
     @DeleteMapping("/{matricula}") // localhost:9081/api/funcionarios/{matricula}
     @PreAuthorize("hasAuthority('FUNCIONARIO_DELETE')")
     public ResponseEntity<Void> deletar(@PathVariable String matricula) {
-
-        return funcionarioService.deletar(matricula)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        funcionarioService.deletar(matricula);
+        return ResponseEntity.noContent().build();
+                
     }
 
 }

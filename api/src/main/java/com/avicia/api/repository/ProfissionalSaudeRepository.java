@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.avicia.api.data.model.ProfissionalSaude;
+import com.avicia.api.model.ProfissionalSaude;
 
 @Repository
 public interface ProfissionalSaudeRepository extends JpaRepository<ProfissionalSaude, Integer>{

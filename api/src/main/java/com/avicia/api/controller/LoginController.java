@@ -1,8 +1,6 @@
 package com.avicia.api.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,11 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.data.dto.request.login.LoginAdminRequest;
 import com.avicia.api.data.dto.request.login.LoginRequest;
-import com.avicia.api.data.dto.request.role.TokenRoleRequest;
 import com.avicia.api.data.dto.response.login.LoginResponse;
-import com.avicia.api.repository.UsuarioRepository;
 import com.avicia.api.service.LoginService;
-import com.avicia.api.service.TokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,58 +17,16 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class LoginController {
-
-    private final UsuarioRepository usuarioRepository;
+    
     private final LoginService loginService;
-    private final TokenService tokenService;
-    private final Argon2PasswordEncoder passwordEncoder;
-
-    @PostMapping("/login") // localhost:9081/api/login
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
-
-        var usuario = usuarioRepository.findByCpf(loginRequest.cpf());
-
-        var roleEntity = usuario.get().getIdRole();
-
-        var dto = new TokenRoleRequest();
-        dto.setIdRole(roleEntity.getIdRole());
-        dto.setNome(roleEntity.getNome());
-        dto.setDescricao(roleEntity.getDescricao());
-        dto.setPermissoes(roleEntity.getPermissoes());
-
-        if (usuario.isEmpty() || !loginService.loginCorreto(loginRequest, passwordEncoder)) {
-            throw new BadCredentialsException("user or password is invalid!");
-        }
-
-        var jwtValue = tokenService.generate(usuario.get().getCpf(), dto);
-        var expiresIn = tokenService.generateExpirationDate();
-
-        return ResponseEntity.ok(new LoginResponse(jwtValue, expiresIn));
+    
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(loginService.realizarLogin(loginRequest));
     }
-
-    @PostMapping("/admin/login") // localhost:9081/api/admin/login
+    
+    @PostMapping("/admin/login")
     public ResponseEntity<LoginResponse> loginAdmin(@RequestBody LoginAdminRequest loginAdminRequest) {
-        
-        var usuario = usuarioRepository.findByNome(loginAdminRequest.nome());
-
-        var roleEntity = usuario.get().getIdRole();
-
-        var dto = new TokenRoleRequest();
-        dto .setIdRole(roleEntity.getIdRole());
-        dto .setNome(roleEntity.getNome());
-        dto .setDescricao(roleEntity.getDescricao());
-        dto .setPermissoes(roleEntity.getPermissoes());
-
-        if (usuario.isEmpty() || !loginService.loginAdminCorreto(loginAdminRequest, passwordEncoder)) {
-            throw new BadCredentialsException("user or password is invalid!");
-        }
-
-        var jwtValue = tokenService.generate(usuario.get().getNome(), dto);
-        var expiresIn = tokenService.generateExpirationDate();
-
-        return ResponseEntity.ok(new LoginResponse(jwtValue, expiresIn));
+        return ResponseEntity.ok(loginService.realizarLoginAdmin(loginAdminRequest));
     }
-
 }
-
-

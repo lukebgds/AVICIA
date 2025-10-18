@@ -32,9 +32,7 @@ public class PacienteController {
 
     @GetMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
     public ResponseEntity<PacienteResponse> buscarPorCpf(@PathVariable String cpf) {
-        return pacienteService.buscarPorCpf(cpf)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(pacienteService.buscarPorCpf(cpf));
     }
 
     @PostMapping("/cadastro") // localhost:9081/api/pacientes/cadastro
@@ -43,17 +41,13 @@ public class PacienteController {
     }
 
     @PutMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
-    public ResponseEntity<PacienteResponse> atualizar(@PathVariable String cpf, @RequestBody PacienteRequest dto) {
-        
-        return pacienteService.atualizar(cpf, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PacienteResponse> atualizar(@PathVariable String cpf, @RequestBody PacienteRequest dto) { 
+        return ResponseEntity.ok(pacienteService.atualizar(cpf, dto));
     }
 
     @DeleteMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
     public ResponseEntity<Void> deletar(@PathVariable String cpf) {
-        return pacienteService.deletar(cpf)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        pacienteService.deletar(cpf);
+        return ResponseEntity.noContent().build();
     }
 }

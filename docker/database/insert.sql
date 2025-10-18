@@ -142,3 +142,35 @@ VALUES (
     'Profissional de saúde (médico/enfermeiro)'
 );
 
+INSERT INTO seguranca.usuario (
+    id_usuario,
+    id_role,
+    nome,
+    cpf,
+    data_nascimento,
+    sexo,
+    estado_civil,
+    email,
+    telefone,
+    endereco,
+    senha_hash,
+    data_criacao,
+    mfa_habilitado,
+    ativo
+) VALUES (
+    100,
+    101,
+    'SISTEMA',
+    'N/A',
+    '2025-01-01',
+    'N/A',
+    'N/A',
+    'N/A',
+    'N/A',
+    'N/A',
+    'N/A',
+    '2025-01-01',
+    false,
+    false
+);
+
