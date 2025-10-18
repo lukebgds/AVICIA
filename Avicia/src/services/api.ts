@@ -19,6 +19,22 @@ interface Role {
   idRole: string;
 }
 
+interface Role {
+  idRole: string;
+  nome: string;
+  idTipoRole: number;
+  descricao: string;
+  permissoes: Record<string, string>;
+}
+
+// Interface para o input de criação (alinhada com o form)
+interface CreateRoleInput {
+  nome: string;
+  idTipoRole: number;
+  descricao: string;
+  permissoes: Record<string, string>;
+}
+
 interface Funcionario {
   idFuncionario: string;
 }
@@ -201,6 +217,33 @@ export const api = {
     );
     console.log("✅🏥 Paciente criado:", pacienteCriado);
     return pacienteCriado;
+  },
+
+  criarRole: async (dados: CreateRoleInput): Promise<Role> => {
+    console.log("🛡️ Criando role:", dados);
+    const roleCriada = await apiFetch<Role>(
+      "/roles",
+      {
+        method: "POST",
+        body: JSON.stringify(dados),
+      },
+      true,
+      "Erro ao criar role"
+    );
+    console.log("✅🛡️ Role criada:", roleCriada);
+    return roleCriada;
+  },
+
+  getAllRoles: async (): Promise<Role[]> => {
+    console.log("🔍 Buscando todas as roles...");
+    const roles = await apiFetch<Role[]>(
+      "/roles",
+      { method: "GET" },
+      true,
+      "Erro ao buscar lista de roles"
+    );
+    console.log("✅🔍 Roles carregadas:", roles);
+    return roles;
   },
 
   deleteUsuario: async (idUsuario: number): Promise<void> => {

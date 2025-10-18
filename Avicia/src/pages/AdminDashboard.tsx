@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import {Shield, Users, Database, Settings, Activity, AlertTriangle, CheckCircle, XCircle, Clock, UserPlus, Edit, Trash2, Search, Stethoscope, BarChart, Calendar, FileText, DollarSign, KeyRound, RefreshCw,} from "lucide-react";
+import { Shield, Users, Database, Settings, Activity, AlertTriangle, CheckCircle, XCircle, Clock, UserPlus, Edit, Trash2, Search, Stethoscope, BarChart, Calendar, FileText, DollarSign, KeyRound, RefreshCw, ArrowLeft, Save } from "lucide-react";
 import { api } from "../services/api";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAuth } from "@/context/AuthContext";
@@ -67,6 +69,102 @@ interface SystemStatusItem {
   message: string;
 }
 
+interface PermissionActions {
+  C: boolean;
+  R: boolean;
+  U: boolean;
+  D: boolean;
+}
+
+// Constantes de Permissões (sem alteração)
+const permissionGroups = [
+  {
+    title: "Administração do Sistema",
+    permissions: [
+      { id: "sistema", label: "Sistema", description: "Configurações gerais e parâmetros do sistema." },
+      { id: "role", label: "Roles (Perfis)", description: "Gerenciar perfis de acesso e suas permissões." },
+      { id: "usuario", label: "Usuários", description: "Gerenciar contas de usuários do sistema." },
+      { id: "log", label: "Logs de Atividade", description: "Visualizar os registros de auditoria do sistema." },
+    ]
+  },
+  {
+    title: "Cadastros Principais",
+    permissions: [
+      { id: "paciente", label: "Pacientes", description: "Gerenciar o cadastro e dados dos pacientes." },
+      { id: "profissionalSaude", label: "Profissionais de Saúde", description: "Gerenciar o cadastro de profissionais de saúde." },
+      { id: "funcionario", label: "Funcionários", description: "Gerenciar o cadastro de funcionários administrativos." },
+      { id: "convenio", label: "Convênios", description: "Gerenciar os convênios médicos aceitos." },
+    ]
+  },
+  {
+    title: "Gestão Clínica",
+    permissions: [
+      { id: "consulta", label: "Consultas", description: "Gerenciar agendamentos e registros de consultas." },
+      { id: "prescricao", label: "Prescrições", description: "Criar e gerenciar prescrições médicas." },
+      { id: "internacao", label: "Internações", description: "Gerenciar os registros de internações de pacientes." },
+    ]
+  },
+  {
+    title: "Prontuário do Paciente",
+    permissions: [
+      { id: "alergia", label: "Alergias", description: "Visualizar e gerenciar registros de alergias." },
+      { id: "medicamento", label: "Medicamentos", description: "Gerenciar o cadastro de medicamentos." },
+      { id: "vacina", label: "Vacinas", description: "Visualizar e gerenciar o histórico de vacinas." },
+      { id: "antecedente", label: "Antecedentes", description: "Gerenciar os antecedentes médicos dos pacientes." },
+      { id: "anexo", label: "Anexos", description: "Gerenciar arquivos e documentos anexados aos prontuários." },
+      { id: "diagnostico", label: "Diagnósticos", description: "Gerenciar diagnósticos (CID) e registros nos prontuários." },
+    ]
+  },
+  {
+    title: "Exames",
+    permissions: [
+      { id: "exame", label: "Tipos de Exame", description: "Gerenciar os tipos de exames disponíveis." },
+      { id: "exameSolicitar", label: "Solicitação de Exames", description: "Permite criar, ler e deletar solicitações de exames." },
+      { id: "exameResultado", label: "Resultados de Exames", description: "Visualizar e anexar resultados de exames." },
+    ]
+  },
+  {
+    title: "Outros Módulos",
+    permissions: [
+      { id: "associacao", label: "Associações", description: "Gerenciar associações entre entidades do sistema." },
+      { id: "relatorio", label: "Relatórios", description: "Gerar e visualizar relatórios do sistema." }
+    ]
+  }
+];
+
+const actions: { id: keyof PermissionActions; label: string }[] = [
+  { id: "C", label: "Criar" },
+  { id: "R", label: "Ler" },
+  { id: "U", label: "Atualizar" },
+  { id: "D", label: "Deletar" },
+];
+
+const allPermissions = permissionGroups.flatMap((group) => group.permissions);
+
+const initialPermissions = allPermissions.reduce((acc, perm) => {
+  acc[perm.id] = { C: false, R: false, U: false, D: false };
+  return acc;
+}, {} as Record<string, PermissionActions>);
+
+interface RoleTypeOption {
+  value: number;
+  label: string;
+}
+
+const roleTypes: RoleTypeOption[] = [
+  { value: 101, label: "Sistema Admin" },
+  { value: 701, label: "Paciente" },
+  { value: 501, label: "Funcionário" },
+  { value: 601, label: "Profissional de Saúde" },
+];
+
+const initialFormData = {
+  name: "",
+  idTipoRole: "",
+  description: "",
+  permissions: initialPermissions,
+};
+
 // --- Constants ---
 const ROLES = ["Paciente", "Funcionário", "Profissional de Saúde"];
 const SYSTEM_STATS = [
@@ -96,12 +194,12 @@ const mapBackendUserToUser = (user: BackendUser): User => ({
     user.idRole === 101
       ? "SYSTEM.ADMIN"
       : user.idRole === 501
-      ? "Funcionário"
-      : user.idRole === 701
-      ? "Paciente"
-      : user.idRole === 601
-      ? "Profissional de Saúde"
-      : "Desconhecido",
+        ? "Funcionário"
+        : user.idRole === 701
+          ? "Paciente"
+          : user.idRole === 601
+            ? "Profissional de Saúde"
+            : "Desconhecido",
   status: user.ativo ? "Ativo" : "Inativo",
   lastLogin: "Nunca", // Expandir com outra query se necessário
   phone: user.telefone,
@@ -126,8 +224,15 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const hasLoadedUsers = useRef(false);
 
+  // States for Role Management
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [roleFormData, setRoleFormData] = useState(initialFormData);
+  const [roles, setRoles] = useState<any[]>([]); // Empty for now, no mock data
+  const [roleSearchTerm, setRoleSearchTerm] = useState("");
+  const [rolesLoading, setRolesLoading] = useState(false);
+
   // --- Data Fetching ---
-const fetchUsers = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
       const response = await api.getAllUsuarios();
@@ -136,7 +241,7 @@ const fetchUsers = async () => {
       SYSTEM_STATS[0].value = mappedUsers.filter(
         (u) => u.status === "Ativo" && u.role !== "SYSTEM.ADMIN"
       ).length;
-      console.log("✅ Usuários carregados:", mappedUsers.length); // OPCIONAL: Pra ver no console se rodou
+      console.log("✅ Usuários carregados:", mappedUsers.length); // OPCIONAL: Pra ver no console se rodou se rodou
     } catch (error) {
       console.error("Erro no fetchUsers:", error);
       toast({
@@ -148,11 +253,29 @@ const fetchUsers = async () => {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      setRolesLoading(true);
+      const response = await api.getAllRoles();
+      setRoles(response);
+      console.log("✅ Roles carregadas:", response.length);
+    } catch (error) {
+      console.error("Erro no fetchRoles:", error);
+      toast({
+        title: "Erro ao carregar roles",
+        variant: "destructive",
+      });
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
   // --- Effects ---
   useEffect(() => {
     if (token) {
       // Só se tem token (após login)
       fetchUsers(); // Roda automático na abertura da página
+      fetchRoles(); // Carrega roles na montagem inicial
     }
 
     // Parte das atividades (mantém se quiser, ou remova)
@@ -166,6 +289,93 @@ const fetchUsers = async () => {
   useEffect(() => {
     localStorage.setItem("recentActivities", JSON.stringify(recentActivities.slice(-10)));
   }, [recentActivities]);
+
+  // Role form handlers
+  const handlePermissionChange = (
+    permissionId: string,
+    action: keyof PermissionActions
+  ) => {
+    setRoleFormData((prev) => {
+      const currentPermissions = prev.permissions[permissionId];
+      const updatedPermissions = {
+        ...currentPermissions,
+        [action]: !currentPermissions[action],
+      };
+
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [permissionId]: updatedPermissions,
+        },
+      };
+    });
+  };
+
+  const constructPermissionsJson = () => {
+    const json: Record<string, string> = {};
+    allPermissions.forEach(perm => {
+      const actions = roleFormData.permissions[perm.id];
+      const selectedActions = [];
+      if (actions.C) selectedActions.push('C');
+      if (actions.R) selectedActions.push('R');
+      if (actions.U) selectedActions.push('U');
+      if (actions.D) selectedActions.push('D');
+      json[perm.id] = selectedActions.length > 0 ? selectedActions.join('') : 'N';
+    });
+    return json;
+  };
+
+  const handleSubmitRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!roleFormData.name || !roleFormData.idTipoRole || !roleFormData.description) {
+      toast({
+        title: "Erro de Validação",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const permissionsJson = constructPermissionsJson();
+    const dataToSave = {
+      nome: roleFormData.name,
+      idTipoRole: parseInt(roleFormData.idTipoRole as string),
+      descricao: roleFormData.description,
+      permissoes: permissionsJson,
+    };
+
+    setRolesLoading(true);
+
+    try {
+      await api.criarRole(dataToSave);
+      console.log("Dados da Role salvos no backend.");
+
+      toast({
+        title: "Sucesso!",
+        description: `A role "${roleFormData.name}" foi cadastrada com sucesso.`,
+      });
+
+      setIsRoleDialogOpen(false);
+      setRoleFormData(initialFormData);
+      await fetchRoles(); // Recarrega a lista para sincronizar com o backend, igual ao users
+    } catch (error) {
+      console.error("Erro ao criar role:", error);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Falha ao cadastrar a role. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
+  const handleAddRole = () => {
+    setRoleFormData(initialFormData);
+    setIsRoleDialogOpen(true);
+  };
 
   // --- Event Handlers ---
   const handleAddUser = () => {
@@ -181,52 +391,52 @@ const fetchUsers = async () => {
     setIsDialogOpen(true);
   };
 
-const [isDeleting, setIsDeleting] = useState<number | null>(null); // Adicionar estado para feedback de carregamento
+  const [isDeleting, setIsDeleting] = useState<number | null>(null); // Adicionar estado para feedback de carregamento
 
-const handleDeleteUser = async (userId: number) => {
-  const userToDelete = users.find((u) => u.id === userId);
-  if (!userToDelete) {
-    toast({
-      title: "Erro",
-      description: "Usuário não encontrado.",
-      variant: "destructive",
-    });
-    return;
-  }
+  const handleDeleteUser = async (userId: number) => {
+    const userToDelete = users.find((u) => u.id === userId);
+    if (!userToDelete) {
+      toast({
+        title: "Erro",
+        description: "Usuário não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const confirmDelete = window.confirm(`Tem certeza que deseja excluir o usuário ${userToDelete.name}?`);
-  if (!confirmDelete) return;
+    const confirmDelete = window.confirm(`Tem certeza que deseja excluir o usuário ${userToDelete.name}?`);
+    if (!confirmDelete) return;
 
-  try {
-    setIsDeleting(userId); // Indica que a exclusão está em andamento
-    await api.deleteUsuario(userId); // Chama o método da API
-    setUsers(users.filter((u) => u.id !== userId)); // Remove da lista local
-    toast({
-      title: "Usuário Removido",
-      description: `Usuário ${userToDelete.name} removido com sucesso`,
-      variant: "default",
-    });
+    try {
+      setIsDeleting(userId); // Indica que a exclusão está em andamento
+      await api.deleteUsuario(userId); // Chama o método da API
+      setUsers(users.filter((u) => u.id !== userId)); // Remove da lista local
+      toast({
+        title: "Usuário Removido",
+        description: `Usuário ${userToDelete.name} removido com sucesso`,
+        variant: "default",
+      });
 
-    const newActivity: ActivityLog = {
-      action: `Usuário removido: ${userToDelete.name}`,
-      user: "Admin",
-      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      status: "warning",
-    };
-    setRecentActivities([newActivity, ...recentActivities]);
+      const newActivity: ActivityLog = {
+        action: `Usuário removido: ${userToDelete.name}`,
+        user: "Admin",
+        time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        status: "warning",
+      };
+      setRecentActivities([newActivity, ...recentActivities]);
 
-    await fetchUsers(); // Recarrega a lista para sincronizar com o backend
-  } catch (error) {
-    console.error("Erro ao deletar usuário:", error);
-    toast({
-      title: "Erro",
-      description: "Falha ao remover usuário. Tente novamente.",
-      variant: "destructive",
-    });
-  } finally {
-    setIsDeleting(null); // Reseta o estado de carregamento
-  }
-};
+      await fetchUsers(); // Recarrega a lista para sincronizar com o backend
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao remover usuário. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(null); // Reseta o estado de carregamento
+    }
+  };
 
   const handleSaveUser = async () => {
     if (!formData.name || !formData.email || !formData.role) {
@@ -262,8 +472,8 @@ const handleDeleteUser = async (userId: number) => {
           formData.role === "Paciente"
             ? "PACIENTE"
             : formData.role === "Funcionário"
-            ? "FUNCIONARIO"
-            : "PROFISSIONAL.SAUDE";
+              ? "FUNCIONARIO"
+              : "PROFISSIONAL.SAUDE";
         const role = await api.getRoleByName(roleName);
         const idRole = role.idRole;
 
@@ -300,120 +510,334 @@ const handleDeleteUser = async (userId: number) => {
           entityCriada = await api.criarPaciente(pacienteData);
         } else if (formData.role === "Funcionário") {
           if (!formData.cargo || !formData.setor || !formData.matricula) {
-            toast({ title: "Erro", description: "Cargo, Setor e Matrícula são obrigatórios.", variant: "destructive" });
-            setLoading(false);
+            toast({ title: "Erro", description: "Cargo, Setor e Matrícula são obrigatórios para Funcionário.", variant: "destructive" });
             return;
           }
-          const funcionarioData = { idUsuario, cargo: formData.cargo || "", setor: formData.setor || "", matricula: formData.matricula || "", observacoes: formData.observacoes || "" };
+          const funcionarioData = {
+            idUsuario,
+            cargo: formData.cargo!,
+            setor: formData.setor!,
+            matricula: formData.matricula!,
+            observacoes: formData.observacoes || "",
+          };
           entityCriada = await api.criarFuncionario(funcionarioData);
         } else if (formData.role === "Profissional de Saúde") {
-          if (!formData.cargo || !formData.matricula || !formData.unidade || !formData.specialty || !formData.conselho || !formData.registroConselho) {
-            toast({ title: "Erro", description: "Campos obrigatórios faltando para Profissional de Saúde.", variant: "destructive" });
-            setLoading(false);
+          if (!formData.cargo || !formData.unidade || !formData.specialty || !formData.conselho || !formData.registroConselho || !formData.matricula) {
+            toast({ title: "Erro", description: "Cargo, Unidade, Especialidade, Conselho, Registro do Conselho e Matrícula são obrigatórios para Profissional de Saúde.", variant: "destructive" });
             return;
           }
-          const profissionalData = { idUsuario, cargo: formData.cargo || "", unidade: formData.unidade || "", especialidade: formData.specialty || "", conselho: formData.conselho || "", registroConselho: formData.registroConselho || "", matricula: formData.matricula || ""};
+          const profissionalData = {
+            idUsuario,
+            cargo: formData.cargo!,
+            unidade: formData.unidade!,
+            especialidade: formData.specialty!,
+            conselho: formData.conselho!,
+            registroConselho: formData.registroConselho!,
+            matricula: formData.matricula!,
+            observacoes: formData.observacoes || "",
+          };
           entityCriada = await api.criarProfissional_saude(profissionalData);
         }
 
-        const newUser: User = { ...(dataToSave as User), id: Number(idUsuario), status: "Ativo", lastLogin: "Nunca" };
-        setUsers([...users, newUser]);
-        toast({ title: "Usuário Criado", description: "Novo usuário criado com sucesso" });
-        const newActivity: ActivityLog = { action: `Novo usuário criado: ${newUser.name}`, user: "Admin", time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), status: "success" };
-        setRecentActivities([newActivity, ...recentActivities]);
-        await fetchUsers();
+        toast({
+          title: "Sucesso!",
+          description: `Usuário ${formData.name} criado com sucesso como ${formData.role}.`,
+        });
+        setIsDialogOpen(false);
+        setFormData({});
+        await fetchUsers(); // Recarrega a lista
       } catch (error) {
-        toast({ title: "Erro no cadastro", description: "Tente novamente mais tarde", variant: "destructive" });
-      }
-    } else if (editingUser) {
-      try {
-        setUsers(users.map((u) => (u.id === editingUser.id ? { ...u, ...dataToSave } as User : u)));
-        toast({ title: "Usuário Atualizado", description: "Usuário atualizado com sucesso" });
-        const newActivity: ActivityLog = { action: `Dados atualizados: ${dataToSave.name}`, user: "Admin", time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), status: "success" };
-        setRecentActivities([newActivity, ...recentActivities]);
-        await fetchUsers();
-      } catch (error) {
-        toast({ title: "Erro", description: "Falha ao atualizar usuário.", variant: "destructive" });
+        console.error("Erro ao criar usuário:", error);
+        toast({
+          title: "Erro ao Criar",
+          description: "Falha ao criar usuário. Verifique os dados e tente novamente.",
+          variant: "destructive",
+        });
       }
     } else {
-      const newUser: User = { ...(dataToSave as User), id: Math.max(...users.map((u) => u.id), 0) + 1, status: "Ativo", lastLogin: "Nunca" };
-      setUsers([...users, newUser]);
-      toast({ title: "Usuário Criado", description: "Novo usuário criado com sucesso" });
-      const newActivity: ActivityLog = { action: `Novo usuário criado: ${newUser.name}`, user: "Admin", time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), status: "success" };
-      setRecentActivities([newActivity, ...recentActivities]);
-      await fetchUsers();
+      // Lógica para edição de usuário existente (implementar se necessário)
+      toast({
+        title: "Funcionalidade em Desenvolvimento",
+        description: "Edição de usuários será implementada em breve.",
+      });
+      setLoading(false);
     }
-
-    setIsDialogOpen(false);
-    setFormData({});
-    setEditingUser(null);
-    setLoading(false);
   };
 
-  // --- Render Functions ---
+// --- Render Functions ---
   const renderUserForm = () => (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{editingUser ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-gray-900">
+            {editingUser ? "Editar Usuário" : "Novo Usuário"}
+          </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto pr-6">
-          {/* Campos Gerais */}
-          <div className="space-y-2"><Label htmlFor="name">Nome Completo *</Label><Input id="name" value={formData.name || ""} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Nome completo" /></div>
-          <div className="space-y-2"><Label htmlFor="email">Email *</Label><Input id="email" type="email" value={formData.email || ""} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="email@exemplo.com" /></div>
-          <div className="space-y-2"><Label htmlFor="password">Senha {editingUser ? "(Opcional)" : "*"}</Label><Input id="password" type="password" value={formData.password || ""} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="********" /></div>
-          <div className="space-y-2"><Label htmlFor="confirmPassword">Confirmar Senha {editingUser ? "(Opcional)" : "*"}</Label><Input id="confirmPassword" type="password" value={formData.confirmPassword || ""} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} placeholder="********" /></div>
-          <div className="space-y-2 col-span-1 md:col-span-2"><Label htmlFor="address">Endereço</Label><Input id="address" value={formData.address || ""} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Rua, Número, Bairro, Cidade - UF" /></div>
-          <div className="space-y-2"><Label htmlFor="birthDate">Data de Nascimento</Label><Input id="birthDate" type="date" value={formData.birthDate || ""} onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} /></div>
-          <div className="space-y-2"><Label htmlFor="cpf">CPF</Label><Input id="cpf" value={formData.cpf || ""} onChange={(e) => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" /></div>
-          <div className="space-y-2"><Label htmlFor="gender">Sexo</Label><Select value={formData.gender || ""} onValueChange={(value) => setFormData({ ...formData, gender: value })}><SelectTrigger><SelectValue placeholder="Selecione o sexo" /></SelectTrigger><SelectContent><SelectItem value="M">Masculino</SelectItem><SelectItem value="F">Feminino</SelectItem><SelectItem value="Outro">Outro</SelectItem><SelectItem value="NaoInformar">Prefiro não informar</SelectItem></SelectContent></Select></div>
-          <div className="space-y-2"><Label htmlFor="maritalStatus">Estado Civil</Label><Select value={formData.maritalStatus || ""} onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}><SelectTrigger><SelectValue placeholder="Selecione o estado civil" /></SelectTrigger><SelectContent><SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem><SelectItem value="Casado(a)">Casado(a)</SelectItem><SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem><SelectItem value="Viuvo(a)">Viúvo(a)</SelectItem></SelectContent></Select></div>
-          <div className="space-y-2"><Label htmlFor="phone">Telefone</Label><Input id="phone" value={formData.phone || ""} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="(11) 99999-9999" /></div>
-          <div className="space-y-2"><Label htmlFor="profession">Profissão</Label><Input id="profession" value={formData.profession || ""} onChange={(e) => setFormData({ ...formData, profession: e.target.value })} placeholder="Profissão" /></div>
-          <div className="space-y-2 col-span-1 md:col-span-2"><Label htmlFor="role">Função no Sistema *</Label><Select value={formData.role || ""} onValueChange={(value) => setFormData({ ...formData, role: value })}><SelectTrigger><SelectValue placeholder="Selecione a função" /></SelectTrigger><SelectContent>{ROLES.map((role) => <SelectItem key={role} value={role}>{role}</SelectItem>)}</SelectContent></Select></div>
 
-          {/* Campos Condicionais */}
-          {formData.role === "Paciente" && (
-            <div className="space-y-2 col-span-1 md:col-span-2">
-              <Label htmlFor="preferencia_contato">Preferência de Contato</Label>
-              <Select value={formData.preferencia_contato || ""} onValueChange={(value) => setFormData({ ...formData, preferencia_contato: value })}>
-                <SelectTrigger><SelectValue placeholder="Selecione a preferência" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Email">Email</SelectItem>
-                  <SelectItem value="Telefone">Telefone</SelectItem>
-                  <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="max-h-[70vh] overflow-y-auto pr-2 space-y-6">
+          {/* === INFORMAÇÕES PESSOAIS === */}
+          <div className="p-5 border rounded-xl bg-gray-50/70 shadow-sm">
+            <h2 className="text-lg font-semibold text-red-800 mb-3">Informações Pessoais</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: "name", label: "Nome Completo", type: "text", placeholder: "Nome completo" },
+                { id: "email", label: "Email", type: "email", placeholder: "email@exemplo.com" },
+                { id: "birthDate", label: "Data de Nascimento", type: "date" },
+                { id: "cpf", label: "CPF", type: "text", placeholder: "000.000.000-00" },
+              ].map(({ id, label, type, placeholder }) => (
+                <div key={id} className="space-y-2">
+                  <Label htmlFor={id}>{label}</Label>
+                  <Input id={id} type={type} value={formData[id] || ""} onChange={e => setFormData({ ...formData, [id]: e.target.value })} placeholder={placeholder} />
+                </div>
+              ))}
+
+              {/* Sexo */}
+              <div className="space-y-2">
+                <Label>Sexo</Label>
+                <Select value={formData.gender || ""} onValueChange={v => setFormData({ ...formData, gender: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o sexo" /></SelectTrigger>
+                  <SelectContent>
+                    {["Masculino", "Feminino", "Outro", "Prefiro não informar"].map((g, i) => (
+                      <SelectItem key={i} value={g === "Masculino" ? "M" : g === "Feminino" ? "F" : g.replace(/\s/g, "")}>{g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Estado Civil */}
+              <div className="space-y-2">
+                <Label>Estado Civil</Label>
+                <Select value={formData.maritalStatus || ""} onValueChange={v => setFormData({ ...formData, maritalStatus: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o estado civil" /></SelectTrigger>
+                  <SelectContent>
+                    {["solteiro(a)", "casado(a)", "divorciado(a)", "viuvo(a)"].map(s => (
+                      <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 col-span-1 md:col-span-2">
+                <Label htmlFor="address">Endereço</Label>
+                <Input id="address" value={formData.address || ""} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Rua, Número, Bairro, Cidade - UF" />
+              </div>
             </div>
-          )}
+          </div>
 
-          {(formData.role === "Funcionário" || formData.role === "Profissional de Saúde") && (
-            <>
-              <div className="space-y-2"><Label htmlFor="matricula">Matrícula</Label><Input id="matricula" value={formData.matricula || ""} onChange={(e) => setFormData({ ...formData, matricula: e.target.value })} placeholder="Nº da Matrícula" /></div>
-              <div className="space-y-2"><Label htmlFor="cargo">Cargo</Label><Input id="cargo" value={formData.cargo || ""} onChange={(e) => setFormData({ ...formData, cargo: e.target.value })} placeholder="Ex: Médico(a), Recepcionista" /></div>
-            </>
-          )}
+          {/* === ACESSO AO SISTEMA === */}
+          <div className="p-5 border rounded-xl bg-white shadow-sm">
+            <h2 className="text-lg font-semibold text-red-800 mb-3">Acesso ao Sistema</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: "password", label: editingUser ? "Senha (Opcional)" : "Senha" },
+                { id: "confirmPassword", label: editingUser ? "Confirmar Senha (Opcional)" : "Confirmar Senha" },
+              ].map(({ id, label }) => (
+                <div key={id} className="space-y-2">
+                  <Label htmlFor={id}>{label}</Label>
+                  <Input id={id} type="password" value={formData[id] || ""} onChange={e => setFormData({ ...formData, [id]: e.target.value })} placeholder="********" />
+                </div>
+              ))}
 
-          {formData.role === "Funcionário" && (
-            <>
-              <div className="space-y-2"><Label htmlFor="setor">Setor</Label><Input id="setor" value={formData.setor || ""} onChange={(e) => setFormData({ ...formData, setor: e.target.value })} placeholder="Setor de trabalho" /></div>
-              <div className="space-y-2"><Label htmlFor="observacoes">Observações</Label><Input id="observacoes" value={formData.observacoes || ""} onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais" /></div>
-            </>
-          )}
+              <div className="space-y-2 col-span-1 md:col-span-2">
+                <Label>Função no Sistema</Label>
+                <Select value={formData.role || ""} onValueChange={v => setFormData({ ...formData, role: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a função" /></SelectTrigger>
+                  <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
 
-          {formData.role === "Profissional de Saúde" && (
-            <>
-              <div className="space-y-2"><Label htmlFor="unidade">Unidade</Label><Input id="unidade" value={formData.unidade || ""} onChange={(e) => setFormData({ ...formData, unidade: e.target.value })} placeholder="Unidade de atuação" /></div>
-              <div className="space-y-2"><Label htmlFor="specialty">Especialidade</Label><Input id="specialty" value={formData.specialty || ""} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })} placeholder="Especialidade médica" /></div>
-              <div className="space-y-2"><Label htmlFor="conselho">Conselho Profissional</Label><Input id="conselho" value={formData.conselho || ""} onChange={(e) => setFormData({ ...formData, conselho: e.target.value })} placeholder="Ex: CRM, COREN" /></div>
-              <div className="space-y-2"><Label htmlFor="registroConselho">Nº do Conselho</Label><Input id="registroConselho" value={formData.registroConselho || ""} onChange={(e) => setFormData({ ...formData, registroConselho: e.target.value })} placeholder="123456-PE" /></div>
-            </>
-          )}
+            {/* Campos Condicionais */}
+            {formData.role === "Paciente" && (
+              <div className="mt-4 space-y-2">
+                <Label>Preferência de Contato</Label>
+                <Select value={formData.preferencia_contato || ""} onValueChange={v => setFormData({ ...formData, preferencia_contato: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a preferência" /></SelectTrigger>
+                  <SelectContent>{["Email", "Telefone", "WhatsApp"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {["Funcionário", "Profissional de Saúde"].includes(formData.role) && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: "matricula", label: "Matrícula", placeholder: "Nº da Matrícula" },
+                  { id: "cargo", label: "Cargo", placeholder: "Ex: Médico(a), Recepcionista" },
+                ].map(({ id, label, placeholder }) => (
+                  <div key={id} className="space-y-2">
+                    <Label htmlFor={id}>{label}</Label>
+                    <Input id={id} value={formData[id] || ""} onChange={e => setFormData({ ...formData, [id]: e.target.value })} placeholder={placeholder} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {formData.role === "Funcionário" && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: "setor", label: "Setor", placeholder: "Setor de trabalho" },
+                  { id: "observacoes", label: "Observações", placeholder: "Observações adicionais" },
+                ].map(({ id, label, placeholder }) => (
+                  <div key={id} className="space-y-2">
+                    <Label htmlFor={id}>{label}</Label>
+                    <Input id={id} value={formData[id] || ""} onChange={e => setFormData({ ...formData, [id]: e.target.value })} placeholder={placeholder} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {formData.role === "Profissional de Saúde" && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: "unidade", label: "Unidade", placeholder: "Unidade de atuação" },
+                  { id: "specialty", label: "Especialidade", placeholder: "Especialidade médica" },
+                  { id: "conselho", label: "Conselho Profissional", placeholder: "Ex: CRM, COREN" },
+                  { id: "registroConselho", label: "Nº do Conselho", placeholder: "123456-PE" },
+                ].map(({ id, label, placeholder }) => (
+                  <div key={id} className="space-y-2">
+                    <Label htmlFor={id}>{label}</Label>
+                    <Input id={id} value={formData[id] || ""} onChange={e => setFormData({ ...formData, [id]: e.target.value })} placeholder={placeholder} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex justify-end gap-2 pt-4 border-t">
+
+        {/* BOTÕES */}
+        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
           <Button disabled={loading} onClick={handleSaveUser} className="bg-red-600 hover:bg-red-700 text-white">
             {loading ? "Salvando..." : editingUser ? "Atualizar" : "Criar"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+
+  const renderRoleForm = () => (
+    <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+      <DialogContent className="max-w-6xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-gray-900">
+            {editingUser ? "Editar Perfil de Acesso" : "Novo Perfil de Acesso"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* === COLUNA ESQUERDA: INFORMAÇÕES BÁSICAS === */}
+          <div className="space-y-6">
+            <div className="p-4 border rounded-xl shadow-sm bg-gray-50/70 sticky top-0">
+              <h2 className="text-lg font-semibold text-red-800 mb-3">Informações Básicas</h2>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="name">Nome do Perfil</Label>
+                  <Input
+                    id="name"
+                    placeholder="Ex: ADMIN.READ, Recepcionista"
+                    value={roleFormData.name}
+                    onChange={e => setRoleFormData({ ...roleFormData, name: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="idTipoRole">Tipo de Role</Label>
+                  <Select
+                    value={roleFormData.idTipoRole}
+                    onValueChange={value => setRoleFormData({ ...roleFormData, idTipoRole: value })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo de role" /></SelectTrigger>
+                    <SelectContent>
+                      {roleTypes.map(option => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva a finalidade e as responsabilidades deste perfil..."
+                    value={roleFormData.description}
+                    onChange={e => setRoleFormData({ ...roleFormData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="max-h-[70vh] overflow-y-auto pr-2 space-y-6">
+              {permissionGroups.map(group => (
+                <div key={group.title} className="p-5 border rounded-xl shadow-sm bg-white">
+                  <h3 className="text-lg font-semibold text-red-800 mb-3">{group.title}</h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                    {group.permissions.map(permission => (
+                      <div
+                        key={permission.id}
+                        className="p-4 border rounded-lg bg-gray-50/60 hover:shadow-md transition"
+                      >
+                        {/* Nome da Permissão */}
+                        <p className="text-base font-semibold text-red-700 mb-1">
+                          {permission.label}
+                        </p>
+
+                        {/* Descrição */}
+                        <p className="text-sm text-gray-600 mb-3">
+                          {permission.description}
+                        </p>
+
+                        {/* Ações */}
+                        <div className="flex flex-wrap gap-4">
+                          {actions.map(action => (
+                            <div key={action.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`${permission.id}-${action.id}`}
+                                checked={roleFormData.permissions[permission.id][action.id]}
+                                onCheckedChange={() => handlePermissionChange(permission.id, action.id)}
+                              />
+                              <label
+                                htmlFor={`${permission.id}-${action.id}`}
+                                className="text-sm font-medium leading-none text-gray-800"
+                              >
+                                {action.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* === BOTÕES === */}
+        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsRoleDialogOpen(false)}
+            className="px-6"
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            type="submit"
+            disabled={rolesLoading}
+            onClick={handleSubmitRole}
+            className="bg-red-600 hover:bg-red-700 text-white px-6"
+          >
+            {rolesLoading ? "Salvando..." : "Salvar Perfil"}
           </Button>
         </div>
       </DialogContent>
@@ -486,10 +910,10 @@ const handleDeleteUser = async (userId: number) => {
                               user.role === "Profissional de Saúde"
                                 ? "bg-blue-100 text-blue-800"
                                 : user.role === "Paciente"
-                                ? "bg-gray-100 text-gray-800"
-                                : user.role === "Funcionário"
-                                ? "bg-teal-100 text-teal-800"
-                                : "bg-gray-100 text-gray-800"
+                                  ? "bg-gray-100 text-gray-800"
+                                  : user.role === "Funcionário"
+                                    ? "bg-teal-100 text-teal-800"
+                                    : "bg-gray-100 text-gray-800"
                             }
                           >
                             {user.role}
@@ -523,6 +947,91 @@ const handleDeleteUser = async (userId: number) => {
     </div>
   );
 
+  const renderAccessControl = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-gray-700">
+              <KeyRound className="h-5 w-5" /> Controle de Acesso - Gerenciamento de Roles
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={handleAddRole} size="sm" className="bg-red-600 hover:bg-red-700 text-white" disabled={rolesLoading}>
+                <Shield className="h-4 w-4 mr-2" /> Novo Perfil
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchRoles} disabled={rolesLoading}>
+                <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Pesquisar roles por nome ou descrição..."
+                value={roleSearchTerm}
+                onChange={(e) => setRoleSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          {rolesLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Carregando roles...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Permissões</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles
+                  .filter(
+                    (role: any) =>
+                      role.nome.toLowerCase().includes(roleSearchTerm.toLowerCase()) ||
+                      role.descricao.toLowerCase().includes(roleSearchTerm.toLowerCase())
+                  )
+                  .map((role: any) => (
+                    <TableRow key={role.id}>
+                      <TableCell className="font-medium text-gray-800">{role.nome}</TableCell>
+                      <TableCell className="text-gray-600">
+                        {roleTypes.find(opt => opt.value === role.idTipoRole)?.label || 'Desconhecido'}
+                      </TableCell>
+                      <TableCell className="text-gray-600">{role.descricao}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {JSON.stringify(role.permissoes).slice(0, 50)}...
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-end">
+                          <Button size="icon" variant="ghost">
+                            <Edit className="h-4 w-4 text-gray-500 hover:text-red-600" />
+                          </Button>
+                          <Button size="icon" variant="ghost">
+                            <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      {renderRoleForm()}
+    </div>
+  );
+
   const renderReports = () => (
     <Card>
       <CardHeader>
@@ -532,19 +1041,6 @@ const handleDeleteUser = async (userId: number) => {
       </CardHeader>
       <CardContent>
         <p>Página para visualização de relatórios e dados do sistema.</p>
-      </CardContent>
-    </Card>
-  );
-
-  const renderAccessControl = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5" /> Controle de Acesso
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>Página para definir perfis e permissões de usuário.</p>
       </CardContent>
     </Card>
   );
@@ -680,8 +1176,8 @@ const handleDeleteUser = async (userId: number) => {
                           item.status === "ok"
                             ? "bg-green-50 border-green-200"
                             : item.status === "warning"
-                            ? "bg-yellow-50 border-yellow-200"
-                            : "bg-red-50 border-red-200";
+                              ? "bg-yellow-50 border-yellow-200"
+                              : "bg-red-50 border-red-200";
                         return (
                           <div key={index} className={`flex items-center gap-2 p-3 rounded-lg border ${bgColor}`}>
                             {icon}
