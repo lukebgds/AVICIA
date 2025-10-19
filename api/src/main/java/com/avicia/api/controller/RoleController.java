@@ -41,7 +41,6 @@ public class RoleController {
     }
 
     @GetMapping("/{nome}") // localhost:9081/api/roles/{nome}
-    @PreAuthorize("hasAuthority('ROLE_READ')")
     public ResponseEntity<RoleResponse> buscarPorNome(@PathVariable String nome) {
         return ResponseEntity.ok(roleService.buscarPorNome(nome));
     }

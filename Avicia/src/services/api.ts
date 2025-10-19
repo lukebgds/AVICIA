@@ -47,7 +47,6 @@ interface Profissional_saude {
 interface UsuariosResponse {
   idUsuario: number;
   nome: string;
-  sobrenome: string;
   cpf: string;
   email: string;
   telefone: string;
@@ -60,30 +59,23 @@ interface UsuariosResponse {
 // --- Interfaces de Entrada ---
 interface CreateUsuarioInput {
   nome: string;
-  sobrenome: string;
   cpf: string;
+  dataNascimento?: string;
+  sexo?: string;
+  estadoCivil?: string;
   email: string;
   senha: string;
   telefone?: string;
+  endereco?: string;
   ativo: boolean;
   mfaHabilitado: boolean;
   dataCriacao: string;
   idRole: string;
-  dataNascimento?: string;
-  sexo?: string;
-  estadoCivil?: string;
-  profissao?: string;
-  endereco?: string;
-  preferenciaContato?: string;
 }
 
 interface CreatePacienteInput {
   idUsuario: number;
-  dataNascimento: string;
-  sexo: string;
-  estadoCivil: string;
   profissao: string;
-  endereco: string;
   preferenciaContato: string;
 }
 
@@ -97,13 +89,12 @@ interface CreateFuncionarioInput {
 
 interface CreateProfissionalSaudeInput {
   idUsuario: number;
-  cargo: string;
-  unidade: string;
-  especialidade: string;
+  matricula: string;
   conselho: string;
   registroConselho: string;
-  matricula: string;
-  observacoes?: string;
+  especialidade: string;
+  cargo: string;
+  unidade: string;
 }
 
 interface LoginInput {

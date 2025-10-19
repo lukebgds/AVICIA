@@ -8,7 +8,6 @@ import lombok.Data;
 public class UsuarioRequest {
     
     private String nome;
-    private String sobrenome;
     private String cpf;
     private LocalDate dataNascimento;
     private String sexo;

@@ -19,7 +19,6 @@ import { useAuth } from "@/context/AuthContext";
 interface BackendUser {
   idUsuario: number;
   nome: string;
-  sobrenome: string;
   cpf: string;
   email: string;
   telefone: string;
@@ -35,7 +34,6 @@ interface User {
   email: string;
   role: string;
   status: string;
-  lastLogin: string;
   phone?: string;
   cpf?: string;
   specialty?: string;
@@ -55,6 +53,15 @@ interface User {
   observacoes?: string;
   preferencia_contato?: string;
 }
+
+interface Role {
+  idRole: string;  // Ou o que for a chave primária
+  nome: string;
+  descricao: string;
+  idTipoRole: number;
+  permissoes: Record<string, string>;
+}
+
 
 interface ActivityLog {
   action: string;
@@ -76,7 +83,7 @@ interface PermissionActions {
   D: boolean;
 }
 
-// Constantes de Permissões (sem alteração)
+// Constantes de Permissões
 const permissionGroups = [
   {
     title: "Administração do Sistema",
@@ -151,12 +158,21 @@ interface RoleTypeOption {
   label: string;
 }
 
-const roleTypes: RoleTypeOption[] = [
-  { value: 101, label: "Sistema Admin" },
-  { value: 701, label: "Paciente" },
-  { value: 501, label: "Funcionário" },
-  { value: 601, label: "Profissional de Saúde" },
-];
+const getRoleTypeLabel = (idRole: number | string): string => {
+  const firstDigit = String(idRole).charAt(0);
+  switch (firstDigit) {
+    case '1':
+      return 'Sistema Admin';
+    case '7':
+      return 'Paciente';
+    case '5':
+      return 'Funcionário';
+    case '6':
+      return 'Profissional de Saúde';
+    default:
+      return 'Desconhecido';
+  }
+};
 
 const initialFormData = {
   name: "",
@@ -188,7 +204,7 @@ const getStatusIcon = (status: string) => {
 
 const mapBackendUserToUser = (user: BackendUser): User => ({
   id: user.idUsuario,
-  name: `${user.nome} ${user.sobrenome}`.trim(),
+  name: `${user.nome}`.trim(),
   email: user.email,
   role:
     user.idRole === 101
@@ -201,7 +217,6 @@ const mapBackendUserToUser = (user: BackendUser): User => ({
             ? "Profissional de Saúde"
             : "Desconhecido",
   status: user.ativo ? "Ativo" : "Inativo",
-  lastLogin: "Nunca", // Expandir com outra query se necessário
   phone: user.telefone,
   cpf: user.cpf,
 });
@@ -227,7 +242,7 @@ const AdminDashboard = () => {
   // States for Role Management
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [roleFormData, setRoleFormData] = useState(initialFormData);
-  const [roles, setRoles] = useState<any[]>([]); // Empty for now, no mock data
+  const [roles, setRoles] = useState<Role[]>([]);
   const [roleSearchTerm, setRoleSearchTerm] = useState("");
   const [rolesLoading, setRolesLoading] = useState(false);
 
@@ -241,7 +256,7 @@ const AdminDashboard = () => {
       SYSTEM_STATS[0].value = mappedUsers.filter(
         (u) => u.status === "Ativo" && u.role !== "SYSTEM.ADMIN"
       ).length;
-      console.log("✅ Usuários carregados:", mappedUsers.length); // OPCIONAL: Pra ver no console se rodou se rodou
+      console.log("✅ Usuários carregados:", mappedUsers.length);
     } catch (error) {
       console.error("Erro no fetchUsers:", error);
       toast({
@@ -466,53 +481,74 @@ const AdminDashboard = () => {
     delete dataToSave.confirmPassword;
     setLoading(true);
 
-    if (!editingUser && (formData.role === "Paciente" || formData.role === "Funcionário" || formData.role === "Profissional de Saúde")) {
+    if (
+      !editingUser &&
+      (formData.role === "Paciente" ||
+        formData.role === "Funcionário" ||
+        formData.role === "Profissional de Saúde")
+    ) {
       try {
+        // 1️⃣ Identifica a role (papel do usuário)
         const roleName =
           formData.role === "Paciente"
             ? "PACIENTE"
             : formData.role === "Funcionário"
               ? "FUNCIONARIO"
               : "PROFISSIONAL.SAUDE";
+
         const role = await api.getRoleByName(roleName);
         const idRole = role.idRole;
 
-        const nomeCompleto = formData.name.trim();
-        const ultimoEspaco = nomeCompleto.lastIndexOf(" ");
-        const nome = ultimoEspaco > 0 ? nomeCompleto.substring(0, ultimoEspaco) : nomeCompleto;
-        const sobrenome = ultimoEspaco > 0 ? nomeCompleto.substring(ultimoEspaco + 1) : "";
-
+        // 2️⃣ Cria o objeto base do usuário
         const usuarioData = {
-          nome,
-          sobrenome,
+          nome: formData.name.trim(),
           cpf: (formData.cpf || "").replace(/\D/g, ""),
+          dataNascimento: formData.birthDate || null,
+          sexo: formData.gender
+            ? formData.gender === "M"
+              ? "MASCULINO"
+              : formData.gender === "F"
+                ? "FEMININO"
+                : "OUTRO"
+            : "OUTRO",
+          estadoCivil: formData.maritalStatus
+            ? formData.maritalStatus.toLowerCase().replace("(a)", "")
+            : "",
           email: formData.email,
           senha: formData.password,
           telefone: formData.phone || "",
+          endereco: formData.address || "",
           ativo: true,
           mfaHabilitado: false,
           dataCriacao: new Date().toISOString().split("T")[0],
           idRole,
-          dataNascimento: formData.birthDate || "",
-          sexo: formData.gender ? (formData.gender === "M" ? "MASCULINO" : formData.gender === "F" ? "FEMININO" : "OUTRO") : "OUTRO",
-          estadoCivil: formData.maritalStatus ? formData.maritalStatus.toLowerCase().replace("(a)", "") : "",
-          profissao: formData.profession || "",
-          endereco: formData.address || "",
-          preferenciaContato: formData.preferencia_contato || "EMAIL",
         };
 
+        // 3️⃣ Cria o usuário base
         const usuarioCriado = await api.criarUsuario(usuarioData);
         const idUsuario = usuarioCriado.idUsuario;
 
-        let entityCriada;
+        // 4️⃣ Cria entidade específica conforme o tipo
         if (formData.role === "Paciente") {
-          const pacienteData = { idUsuario, ...usuarioData };
-          entityCriada = await api.criarPaciente(pacienteData);
-        } else if (formData.role === "Funcionário") {
+          const pacienteData = {
+            idUsuario,
+            profissao: formData.profession || "",
+            preferenciaContato: formData.preferencia_contato || "EMAIL",
+          };
+          await api.criarPaciente(pacienteData);
+        }
+
+        else if (formData.role === "Funcionário") {
           if (!formData.cargo || !formData.setor || !formData.matricula) {
-            toast({ title: "Erro", description: "Cargo, Setor e Matrícula são obrigatórios para Funcionário.", variant: "destructive" });
+            toast({
+              title: "Erro",
+              description:
+                "Cargo, Setor e Matrícula são obrigatórios para Funcionário.",
+              variant: "destructive",
+            });
             return;
           }
+
           const funcionarioData = {
             idUsuario,
             cargo: formData.cargo!,
@@ -520,42 +556,59 @@ const AdminDashboard = () => {
             matricula: formData.matricula!,
             observacoes: formData.observacoes || "",
           };
-          entityCriada = await api.criarFuncionario(funcionarioData);
-        } else if (formData.role === "Profissional de Saúde") {
-          if (!formData.cargo || !formData.unidade || !formData.specialty || !formData.conselho || !formData.registroConselho || !formData.matricula) {
-            toast({ title: "Erro", description: "Cargo, Unidade, Especialidade, Conselho, Registro do Conselho e Matrícula são obrigatórios para Profissional de Saúde.", variant: "destructive" });
-            return;
-          }
-          const profissionalData = {
-            idUsuario,
-            cargo: formData.cargo!,
-            unidade: formData.unidade!,
-            especialidade: formData.specialty!,
-            conselho: formData.conselho!,
-            registroConselho: formData.registroConselho!,
-            matricula: formData.matricula!,
-            observacoes: formData.observacoes || "",
-          };
-          entityCriada = await api.criarProfissional_saude(profissionalData);
+          await api.criarFuncionario(funcionarioData);
         }
 
+        else if (formData.role === "Profissional de Saúde") {
+          if (
+            !formData.cargo ||
+            !formData.unidade ||
+            !formData.specialty ||
+            !formData.conselho ||
+            !formData.registroConselho ||
+            !formData.matricula
+          ) {
+            toast({
+              title: "Erro",
+              description:
+                "Cargo, Unidade, Especialidade, Conselho, Registro do Conselho e Matrícula são obrigatórios para Profissional de Saúde.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          const profissionalData = {
+            idUsuario,
+            matricula: formData.matricula!,
+            conselho: formData.conselho!,
+            registroConselho: formData.registroConselho!,
+            especialidade: formData.specialty!,
+            cargo: formData.cargo!,
+            unidade: formData.unidade!,
+          };
+          await api.criarProfissional_saude(profissionalData);
+        }
+
+        // 5️⃣ Feedback visual e reset
         toast({
           title: "Sucesso!",
           description: `Usuário ${formData.name} criado com sucesso como ${formData.role}.`,
         });
+
         setIsDialogOpen(false);
         setFormData({});
-        await fetchUsers(); // Recarrega a lista
+        await fetchUsers();
       } catch (error) {
         console.error("Erro ao criar usuário:", error);
         toast({
           title: "Erro ao Criar",
-          description: "Falha ao criar usuário. Verifique os dados e tente novamente.",
+          description:
+            "Falha ao criar usuário. Verifique os dados e tente novamente.",
           variant: "destructive",
         });
       }
     } else {
-      // Lógica para edição de usuário existente (implementar se necessário)
+      // Lógica para edição (ainda não implementada)
       toast({
         title: "Funcionalidade em Desenvolvimento",
         description: "Edição de usuários será implementada em breve.",
@@ -564,7 +617,7 @@ const AdminDashboard = () => {
     }
   };
 
-// --- Render Functions ---
+  // --- Render Functions ---
   const renderUserForm = () => (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="max-w-4xl">
@@ -584,6 +637,7 @@ const AdminDashboard = () => {
                 { id: "email", label: "Email", type: "email", placeholder: "email@exemplo.com" },
                 { id: "birthDate", label: "Data de Nascimento", type: "date" },
                 { id: "cpf", label: "CPF", type: "text", placeholder: "000.000.000-00" },
+                { id: "phone", label: "Telefone", type: "tel", placeholder: "(00) 00000-0000" },
               ].map(({ id, label, type, placeholder }) => (
                 <div key={id} className="space-y-2">
                   <Label htmlFor={id}>{label}</Label>
@@ -650,11 +704,17 @@ const AdminDashboard = () => {
             {/* Campos Condicionais */}
             {formData.role === "Paciente" && (
               <div className="mt-4 space-y-2">
-                <Label>Preferência de Contato</Label>
-                <Select value={formData.preferencia_contato || ""} onValueChange={v => setFormData({ ...formData, preferencia_contato: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a preferência" /></SelectTrigger>
-                  <SelectContent>{["Email", "Telefone", "WhatsApp"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="profession">Profissão</Label>
+                  <Input id="profession" value={formData.profession || ""} onChange={e => setFormData({ ...formData, profession: e.target.value })} placeholder="Profissão do paciente" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Preferência de Contato</Label>
+                  <Select value={formData.preferencia_contato || ""} onValueChange={v => setFormData({ ...formData, preferencia_contato: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a preferência" /></SelectTrigger>
+                    <SelectContent>{["Email", "Telefone", "WhatsApp"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
 
@@ -715,7 +775,6 @@ const AdminDashboard = () => {
     </Dialog>
   );
 
-
   const renderRoleForm = () => (
     <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
       <DialogContent className="max-w-6xl">
@@ -749,9 +808,10 @@ const AdminDashboard = () => {
                   >
                     <SelectTrigger><SelectValue placeholder="Selecione o tipo de role" /></SelectTrigger>
                     <SelectContent>
-                      {roleTypes.map(option => (
-                        <SelectItem key={option.value} value={option.value.toString()}>
-                          {option.label}
+                      {/* Opção dinâmica: Gera baseado no primeiro dígito, ou use roles existentes */}
+                      {roles.map(role => (
+                        <SelectItem key={role.idRole} value={role.idRole.toString()}>
+                          {getRoleTypeLabel(role.idRole)} ({role.idRole})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -887,7 +947,6 @@ const AdminDashboard = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Função</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Último Login</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -924,7 +983,6 @@ const AdminDashboard = () => {
                             {user.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-gray-500">{user.lastLogin}</TableCell>
                         <TableCell>
                           <div className="flex gap-2 justify-end">
                             <Button size="icon" variant="ghost" onClick={() => handleEditUser(user)}>
@@ -999,11 +1057,11 @@ const AdminDashboard = () => {
                       role.nome.toLowerCase().includes(roleSearchTerm.toLowerCase()) ||
                       role.descricao.toLowerCase().includes(roleSearchTerm.toLowerCase())
                   )
-                  .map((role: any) => (
-                    <TableRow key={role.id}>
+                  .map((role: Role) => (
+                    <TableRow key={role.idRole}>
                       <TableCell className="font-medium text-gray-800">{role.nome}</TableCell>
                       <TableCell className="text-gray-600">
-                        {roleTypes.find(opt => opt.value === role.idTipoRole)?.label || 'Desconhecido'}
+                        {getRoleTypeLabel(role.idRole)} ({role.idRole})
                       </TableCell>
                       <TableCell className="text-gray-600">{role.descricao}</TableCell>
                       <TableCell>
