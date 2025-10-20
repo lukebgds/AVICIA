@@ -113,7 +113,7 @@ INSERT INTO seguranca.roles (
     descricao
 )
 VALUES (
-    601,
+    301,
     'PROFISSIONAL.SAUDE',
     '{
         "sistema": "N",

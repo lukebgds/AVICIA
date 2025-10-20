@@ -27,44 +27,44 @@ public class ProfissionalSaudeController {
     private final ProfissionalSaudeService profissionalService;
 
     @PostMapping // localhost:9081/api/profissionais-saude
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_CREATE')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_CREATE')")
     public ResponseEntity<ProfissionalSaudeResponse> criar(@RequestBody ProfissionalSaudeRequest dto) {
         return ResponseEntity.ok(profissionalService.criar(dto));
     }
 
     @GetMapping // localhost:9081/api/profissionais-saude
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_READ')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<List<ProfissionalSaudeResponse>> listarTodos() {
         return ResponseEntity.ok(profissionalService.listarTodos());
     }
 
     @GetMapping("/{idProfissional}") // localhost:9081/api/profissionais-saude/{idProfissional}
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_READ')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<ProfissionalSaudeResponse> buscarPorIdProfissional(@PathVariable Integer idProfissional) {
 
         return ResponseEntity.ok(profissionalService.buscarPorIdProfissional(idProfissional));
     }
 
     @GetMapping("/matricula/{matricula}")
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_READ')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<ProfissionalSaudeResponse> buscarPorMatricula(@PathVariable String matricula) {
         return ResponseEntity.ok(profissionalService.buscarPorMatricula(matricula));
     }
 
     @GetMapping("/registro/{registroConselho}")
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_READ')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<ProfissionalSaudeResponse> buscarPorRegistroConselho(@PathVariable String registroConselho) {
         return ResponseEntity.ok(profissionalService.buscarPorRegistroConselho(registroConselho));
     }
 
     @PutMapping("/{matricula}")
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_UPDATE')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_UPDATE')")
     public ResponseEntity<ProfissionalSaudeResponse> atualizar(@PathVariable String matricula, @RequestBody ProfissionalSaudeRequest dto) {
         return ResponseEntity.ok(profissionalService.atualizar(matricula, dto));
     }
 
     @DeleteMapping("/{matricula}")
-    @PreAuthorize("hasAuthority('PROFISSIONAL.SAUDE_DELETE')")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_DELETE')")
     public ResponseEntity<Void> deletar(@PathVariable String matricula) {
         profissionalService.deletar(matricula); 
         return ResponseEntity.noContent().build();                  
