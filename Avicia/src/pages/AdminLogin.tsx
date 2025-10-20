@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -29,15 +29,6 @@ const AdminLogin = () => {
     });
   };
 
-  const setTemporaryError = (
-    field: string,
-    message: string,
-    duration = 4000
-  ) => {
-    setErrors((prev) => ({ ...prev, [field]: message }));
-    setTimeout(() => clearError(field), duration);
-  };
-
   // Função para validar todos os campos e definir erros inline (chamada no submit)
   const validateAllFields = () => {
     // Limpa erros existentes antes de validar
@@ -47,28 +38,27 @@ const AdminLogin = () => {
 
     const required = ["nome", "senha"] as const;
 
-    // Verifica campos vazios e define erros temporários
+    // Verifica campos vazios e define erros
+    const nextErrors: { [key: string]: string } = {};
     for (const field of required) {
       const value = loginData[field as keyof typeof loginData];
       if (!value?.toString().trim()) {
-        setTemporaryError(field, "Preencha este campo.");
+        nextErrors[field] = "Preencha este campo";
         hasError = true;
       }
     }
 
     // Validações específicas (apenas se não vazio)
-    const nextErrors: { [key: string]: string } = {};
-
     if (loginData.senha.trim()) {
       if (loginData.senha.length < 8) {
-        nextErrors.senha = "A senha deve ter pelo menos 8 caracteres.";
+        nextErrors.senha = "A senha deve ter pelo menos 8 caracteres";
         hasError = true;
       }
     }
 
-    // Aplica os erros específicos (permanentes)
+    // Aplica os erros
     if (Object.keys(nextErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...nextErrors }));
+      setErrors(nextErrors);
     }
 
     // Retorna se válido
@@ -87,7 +77,7 @@ const AdminLogin = () => {
 
     // SEMPRE checa vazio PRIMEIRO (para TODOS os campos)
     if (!value?.toString().trim()) {
-      setTemporaryError(field, "Preencha este campo.");
+      setErrors((prev) => ({ ...prev, [field]: "Preencha este campo" }));
       return;
     }
 
@@ -112,8 +102,7 @@ const AdminLogin = () => {
     if (!isValid) {
       toast({
         title: "Campos obrigatórios",
-        description:
-          "Preencha todos os campos obrigatórios e corrija os erros.",
+        description: "Preencha todos os campos obrigatórios e corrija os erros",
         variant: "destructive",
       });
     }
@@ -187,19 +176,24 @@ const AdminLogin = () => {
                   Usuário
                 </Label>
                 <div className="relative group">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-destructive transition-colors" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-color" />
                   <Input
                     id="nome"
                     type="text"
                     placeholder="Digite seu usuário"
-                    className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-destructive focus:border-destructive rounded-lg transition-all"
+                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.nome ? "border-red-500" : ""
+                    }`}
                     value={loginData.nome}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("nome")}
                   />
                 </div>
                 {errors.nome && (
-                  <p className="text-xs text-red-500 mt-1">{errors.nome}</p>
+                  <div className="flex items-center text-xs text-red-500 mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span>{errors.nome}</span>
+                  </div>
                 )}
               </div>
 
@@ -212,12 +206,14 @@ const AdminLogin = () => {
                   Senha
                 </Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-destructive transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-color" />
                   <Input
                     id="senha"
                     type={showPassword ? "text" : "password"}
                     placeholder="Digite sua senha"
-                    className="pl-10 pr-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-destructive focus:border-destructive rounded-lg transition-all"
+                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.senha ? "border-red-500" : ""
+                    }`}
                     value={loginData.senha}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("senha")}
@@ -228,14 +224,17 @@ const AdminLogin = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     ) : (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     )}
                   </button>
                 </div>
                 {errors.senha && (
-                  <p className="text-xs text-red-500 mt-1">{errors.senha}</p>
+                  <div className="flex items-center text-xs text-red-500 mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span>{errors.senha}</span>
+                  </div>
                 )}
               </div>
 

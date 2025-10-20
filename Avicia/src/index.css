@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     --background: 148 20% 98%;
@@ -42,7 +41,11 @@
     --medical-primary: 162 85% 45%;
     --medical-secondary: 195 85% 75%;
     --medical-light: 195 30% 95%;
-    --medical-gradient: linear-gradient(135deg, hsl(162 85% 45%), hsl(195 85% 55%));
+    --medical-gradient: linear-gradient(
+      135deg,
+      hsl(162 85% 45%),
+      hsl(195 85% 55%)
+    );
     --medical-glow: 0 10px 30px -10px hsl(162 85% 45% / 0.3);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -112,4 +115,21 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+input:valid,
+select:valid {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove o ícone de mostrar senha do Edge/Chrome */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-textfield-decoration-container {
+  display: none !important;
 }

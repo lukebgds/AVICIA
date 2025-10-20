@@ -22,9 +22,11 @@ import {
   Briefcase,
   Eye,
   EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+
 const Cadastro = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -59,15 +61,6 @@ const Cadastro = () => {
     });
   };
 
-  const setTemporaryError = (
-    field: string,
-    message: string,
-    duration = 4000
-  ) => {
-    setErrors((prev) => ({ ...prev, [field]: message }));
-    setTimeout(() => clearError(field), duration);
-  };
-
   const formatCPF = (value: string) => {
     const numeric = value.replace(/\D/g, "").slice(0, 11);
     if (numeric.length < 4) return numeric;
@@ -100,22 +93,21 @@ const Cadastro = () => {
       "profissao",
     ] as const;
 
-    // Verifica campos vazios e define erros temporários
+    // Verifica campos vazios e define erros
+    const nextErrors: { [key: string]: string } = {};
     for (const field of required) {
       const value = formData[field as keyof typeof formData];
       if (!value?.toString().trim()) {
-        setTemporaryError(field, "Preencha este campo.");
+        nextErrors[field] = "Preencha este campo";
         hasError = true;
       }
     }
 
     // Validações específicas (apenas se não vazio)
-    const nextErrors: { [key: string]: string } = {};
-
     if (formData.cpf.trim()) {
       const cpfDigits = formData.cpf.replace(/\D/g, "");
       if (cpfDigits.length !== 11) {
-        nextErrors.cpf = "CPF deve conter exatamente 11 números.";
+        nextErrors.cpf = "CPF deve conter exatamente 11 números";
         hasError = true;
       }
     }
@@ -123,28 +115,28 @@ const Cadastro = () => {
     if (formData.telefone.trim()) {
       const telefoneDigits = formData.telefone.replace(/\D/g, "");
       if (telefoneDigits.length !== 11) {
-        nextErrors.telefone = "Telefone deve conter exatamente 11 números.";
+        nextErrors.telefone = "Telefone deve conter exatamente 11 números";
         hasError = true;
       }
     }
 
     if (formData.password.trim()) {
       if (formData.password.length < 8) {
-        nextErrors.password = "A senha deve ter pelo menos 8 caracteres.";
+        nextErrors.password = "A senha deve ter pelo menos 8 caracteres";
         hasError = true;
       }
     }
 
     if (formData.confirmPassword.trim()) {
       if (formData.confirmPassword !== formData.password) {
-        nextErrors.confirmPassword = "As senhas não coincidem.";
+        nextErrors.confirmPassword = "As senhas não coincidem";
         hasError = true;
       }
     }
 
-    // Aplica os erros específicos (permanentes)
+    // Aplica os erros
     if (Object.keys(nextErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...nextErrors }));
+      setErrors(nextErrors);
     }
 
     // Retorna se válido
@@ -191,7 +183,7 @@ const Cadastro = () => {
 
     // SEMPRE checa se vazio PRIMEIRO (para TODOS os campos)
     if (!value?.toString().trim()) {
-      setTemporaryError(field, "Preencha este campo.");
+      setErrors((prev) => ({ ...prev, [field]: "Preencha este campo" }));
       return;
     }
 
@@ -201,20 +193,20 @@ const Cadastro = () => {
     if (field === "cpf") {
       const digits = value.toString().replace(/\D/g, "");
       if (digits.length !== 11)
-        next.cpf = "CPF deve conter exatamente 11 números.";
+        next.cpf = "CPF deve conter exatamente 11 números";
       else delete next.cpf;
     } else if (field === "telefone") {
       const digits = value.toString().replace(/\D/g, "");
       if (digits.length !== 11)
-        next.telefone = "Telefone deve conter exatamente 11 números.";
+        next.telefone = "Telefone deve conter exatamente 11 números";
       else delete next.telefone;
     } else if (field === "password") {
       if (value.toString().length < 8)
-        next.password = "A senha deve ter pelo menos 8 caracteres.";
+        next.password = "A senha deve ter pelo menos 8 caracteres";
       else delete next.password;
     } else if (field === "confirmPassword") {
       if (value.toString() !== formData.password)
-        next.confirmPassword = "As senhas não coincidem.";
+        next.confirmPassword = "As senhas não coincidem";
       else delete next.confirmPassword;
     } else {
       // Para outros campos não vazios, limpa (sem validação extra)
@@ -230,8 +222,7 @@ const Cadastro = () => {
     if (!isValid) {
       toast({
         title: "Campos obrigatórios",
-        description:
-          "Preencha todos os campos obrigatórios e corrija os erros.",
+        description: "Preencha todos os campos obrigatórios e corrija os erros",
         variant: "destructive",
       });
     }
@@ -320,7 +311,7 @@ const Cadastro = () => {
 
         <Card className="shadow-2xl border border-blue-200/50 bg-white/95 backdrop-blur-sm rounded-2xl w-full">
           <CardHeader className="text-center py-4">
-            <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2 relative right-4">
+            <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2 relative right-3">
               <User className="h-7 w-7" /> Criar Conta
             </CardTitle>
           </CardHeader>
@@ -340,14 +331,19 @@ const Cadastro = () => {
                   <Input
                     id="name"
                     placeholder="Digite seu nome completo"
-                    className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.name ? "border-red-500" : ""
+                    }`}
                     value={formData.name}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("name")}
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+                  <div className="flex items-center text-xs text-red-500 mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span>{errors.name}</span>
+                  </div>
                 )}
               </div>
 
@@ -365,14 +361,19 @@ const Cadastro = () => {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.email ? "border-red-500" : ""
+                    }`}
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("email")}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                  <div className="flex items-center text-xs text-red-500 mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span>{errors.email}</span>
+                  </div>
                 )}
               </div>
 
@@ -391,7 +392,9 @@ const Cadastro = () => {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Digite sua senha"
-                      className="pl-10 pr-10 py-3 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`pl-10 pr-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.password ? "border-red-500" : ""
+                      }`}
                       value={formData.password}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("password")}
@@ -402,16 +405,17 @@ const Cadastro = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       ) : (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-5 w-5" />
                       )}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.password}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.password}</span>
+                    </div>
                   )}
                 </div>
 
@@ -428,7 +432,9 @@ const Cadastro = () => {
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirme sua senha"
-                      className="pl-10 pr-10 py-3 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`pl-10 pr-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.confirmPassword ? "border-red-500" : ""
+                      }`}
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("confirmPassword")}
@@ -441,16 +447,17 @@ const Cadastro = () => {
                       }
                     >
                       {showConfirmPassword ? (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       ) : (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-5 w-5" />
                       )}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.confirmPassword}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.confirmPassword}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -467,13 +474,18 @@ const Cadastro = () => {
                   <Input
                     id="cpf"
                     placeholder="000.000.000-00"
-                    className="py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                    className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.cpf ? "border-red-500" : ""
+                    }`}
                     value={formData.cpf}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("cpf")}
                   />
                   {errors.cpf && (
-                    <p className="text-xs text-red-500 mt-1">{errors.cpf}</p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.cpf}</span>
+                    </div>
                   )}
                 </div>
                 <div className="space-y-1">
@@ -488,16 +500,19 @@ const Cadastro = () => {
                     <Input
                       id="telefone"
                       placeholder="(00) 00000-0000"
-                      className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.telefone ? "border-red-500" : ""
+                      }`}
                       value={formData.telefone}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("telefone")}
                     />
                   </div>
                   {errors.telefone && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.telefone}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.telefone}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -515,14 +530,19 @@ const Cadastro = () => {
                   <Input
                     id="endereco"
                     placeholder="Digite seu endereço completo"
-                    className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                      errors.endereco ? "border-red-500" : ""
+                    }`}
                     value={formData.endereco}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("endereco")}
                   />
                 </div>
                 {errors.endereco && (
-                  <p className="text-xs text-red-500 mt-1">{errors.endereco}</p>
+                  <div className="flex items-center text-xs text-red-500 mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span>{errors.endereco}</span>
+                  </div>
                 )}
               </div>
 
@@ -540,16 +560,19 @@ const Cadastro = () => {
                     <Input
                       id="dataNascimento"
                       type="date"
-                      className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.dataNascimento ? "border-red-500" : ""
+                      }`}
                       value={formData.dataNascimento}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("dataNascimento")}
                     />
                   </div>
                   {errors.dataNascimento && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.dataNascimento}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.dataNascimento}</span>
+                    </div>
                   )}
                 </div>
 
@@ -565,7 +588,9 @@ const Cadastro = () => {
                     onValueChange={(value) => handleSelectChange("sexo", value)}
                   >
                     <SelectTrigger
-                      className="py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.sexo ? "border-red-500" : ""
+                      }`}
                       onBlur={() => handleBlur("sexo")}
                     >
                       <SelectValue placeholder="Selecione o sexo" />
@@ -577,7 +602,10 @@ const Cadastro = () => {
                     </SelectContent>
                   </Select>
                   {errors.sexo && (
-                    <p className="text-xs text-red-500 mt-1">{errors.sexo}</p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.sexo}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -598,7 +626,9 @@ const Cadastro = () => {
                     }
                   >
                     <SelectTrigger
-                      className="py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.estadoCivil ? "border-red-500" : ""
+                      }`}
                       onBlur={() => handleBlur("estadoCivil")}
                     >
                       <SelectValue placeholder="Selecione o estado civil" />
@@ -611,9 +641,10 @@ const Cadastro = () => {
                     </SelectContent>
                   </Select>
                   {errors.estadoCivil && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.estadoCivil}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.estadoCivil}</span>
+                    </div>
                   )}
                 </div>
 
@@ -629,16 +660,19 @@ const Cadastro = () => {
                     <Input
                       id="profissao"
                       placeholder="Digite sua profissão"
-                      className="pl-10 py-2.5 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all"
+                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
+                        errors.profissao ? "border-red-500" : ""
+                      }`}
                       value={formData.profissao}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("profissao")}
                     />
                   </div>
                   {errors.profissao && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.profissao}
-                    </p>
+                    <div className="flex items-center text-xs text-red-500 mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{errors.profissao}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -648,7 +682,7 @@ const Cadastro = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg duration-300"
                 >
                   {loading ? "Criando..." : "Criar Conta"}
                 </Button>
