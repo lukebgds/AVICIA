@@ -14,7 +14,7 @@ import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.Paciente;
 import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.PacienteRepository;
-import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.security.verify.VerificarPaciente;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +23,10 @@ import lombok.RequiredArgsConstructor;
 public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
-    private final UsuarioRepository usuarioRepository;
     private final SystemLogService systemLogService;
+    private final VerificarPaciente verificarPaciente;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<PacienteResponse> listarTodos() {
         return pacienteRepository.findAll()
                 .stream()
@@ -34,57 +34,30 @@ public class PacienteService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public PacienteResponse buscarPorId(Integer id) {
-        if (id == null) {
-            throw new BusinessException("ID do paciente não pode ser nulo");
-        }
-        
-        return pacienteRepository.findById(id)
-                .map(PacienteMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Paciente com ID %d não encontrado", id));
+        Paciente paciente = verificarPaciente.buscarPacientePorId(id);
+        return PacienteMapper.toResponseDTO(paciente);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public PacienteResponse buscarPorCpf(String cpf) {
-        if (cpf == null || cpf.trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
-        
-        return pacienteRepository.findByUsuario_Cpf(cpf)
-                .map(PacienteMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Paciente com CPF %s não encontrado", cpf));
+        Paciente paciente = verificarPaciente.buscarPacientePorCpf(cpf);
+        return PacienteMapper.toResponseDTO(paciente);
     }
 
     @Transactional
     public PacienteResponse criar(PacienteRequest dto) {
         // Validações
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
+        verificarPaciente.validarIdUsuarioNaoNulo(dto.getIdUsuario());
         
         Paciente paciente = PacienteMapper.toEntity(dto);
 
         // Recupera o usuário
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-            .orElseThrow(() -> {
-                systemLogService.registrarErro(
-                    null,
-                    "Paciente",
-                    "Tentativa de criar paciente com usuário inexistente: ID " + dto.getIdUsuario()
-                );
-                return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-            });
+        Usuario usuario = verificarPaciente.buscarUsuarioPorId(dto.getIdUsuario());
         
         // Verifica se já existe um paciente para este usuário
-        if (pacienteRepository.findByUsuario_Cpf(usuario.getCpf()).isPresent()) {
-            systemLogService.registrarErro(
-                null,
-                "Paciente",
-                "Tentativa de criar paciente duplicado para usuário: " + usuario.getCpf()
-            );
-            throw new BusinessException("Já existe um paciente cadastrado para o usuário com CPF %s", usuario.getCpf());
-        }
+        verificarPaciente.verificarPacienteDuplicado(usuario.getCpf());
         
         paciente.setUsuario(usuario);
 
@@ -106,27 +79,13 @@ public class PacienteService {
 
     @Transactional
     public PacienteResponse atualizar(String cpf, PacienteRequest dto) {
-        if (cpf == null || cpf.trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
+        verificarPaciente.validarCpfNaoVazio(cpf);
+        verificarPaciente.validarIdUsuarioNaoNulo(dto.getIdUsuario());
         
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
-        
-        Paciente existing = pacienteRepository.findByUsuario_Cpf(cpf)
-                .orElseThrow(() -> new BusinessException("Paciente com CPF %s não encontrado", cpf));
+        Paciente existing = verificarPaciente.buscarPacientePorCpf(cpf);
         
         // Verifica se o usuário existe
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-            .orElseThrow(() -> {
-                systemLogService.registrarErro(
-                    existing.getIdPaciente(),
-                    "Paciente",
-                    "Tentativa de atualizar paciente com usuário inexistente: ID " + dto.getIdUsuario()
-                );
-                return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-            });
+        Usuario usuario = verificarPaciente.buscarUsuarioPorIdAtualizacao(dto.getIdUsuario(), existing.getIdPaciente());
         
         Paciente paciente = PacienteMapper.toEntity(dto);
         paciente.setIdPaciente(existing.getIdPaciente());
@@ -146,13 +105,9 @@ public class PacienteService {
 
     @Transactional
     public void deletar(String cpf) {
-        if (cpf == null || cpf.trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
+        verificarPaciente.validarCpfNaoVazio(cpf);
         
-        Paciente existing = pacienteRepository.findByUsuario_Cpf(cpf)
-                .orElseThrow(() -> new BusinessException("Paciente com CPF %s não encontrado", cpf));
-        
+        Paciente existing = verificarPaciente.buscarPacientePorCpf(cpf);
         Integer idPaciente = existing.getIdPaciente();
         
         pacienteRepository.delete(existing);
@@ -171,29 +126,27 @@ public class PacienteService {
         int tentativas = 0;
         int maxTentativas = 1000;
         
+        verificarPaciente.validarIdUsuarioParaGeracao(idUsuario);
+        
         String idUsuarioStr = String.valueOf(idUsuario);
-        
-        if (idUsuarioStr.length() < 3) {
-            throw new BusinessException("ID do usuário inválido para geração de ID do paciente");
-        }
-        
         String prefixo = idUsuarioStr.substring(0, 3);
         
         while (tentativas < maxTentativas) {
             String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             Integer idPaciente = Integer.parseInt(prefixo + numeroAleatorio);
             
-            if (!pacienteRepository.existsById(idPaciente)) {
+            if (!verificarPaciente.idPacienteExiste(idPaciente)) {
                 return idPaciente;
             }
             tentativas++;
         }
         
-        systemLogService.registrarErro(
-            null,
+        // Se chegou aqui, não conseguiu gerar ID único após todas as tentativas
+        throw new BusinessException(
+            100,
             "Paciente",
-            "Não foi possível gerar ID único para paciente após " + maxTentativas + " tentativas"
+            "Não foi possível gerar um ID único para o paciente após %d tentativas. Tente novamente.",
+            maxTentativas
         );
-        throw new BusinessException("Não foi possível gerar um ID único para o paciente. Tente novamente.");
     }
 }

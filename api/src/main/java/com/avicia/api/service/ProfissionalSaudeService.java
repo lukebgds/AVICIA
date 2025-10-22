@@ -14,7 +14,7 @@ import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.ProfissionalSaude;
 import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.ProfissionalSaudeRepository;
-import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.security.verify.VerificarProfissionalSaude;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,57 +23,24 @@ import lombok.RequiredArgsConstructor;
 public class ProfissionalSaudeService {
     
     private final ProfissionalSaudeRepository profissionalRepository;
-    private final UsuarioRepository usuarioRepository;
     private final SystemLogService systemLogService;
+    private final VerificarProfissionalSaude verificarProfissionalSaude;
     
     @Transactional
     public ProfissionalSaudeResponse criar(ProfissionalSaudeRequest dto) {
         // Validações
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
+        verificarProfissionalSaude.validarIdUsuarioNaoNulo(dto.getIdUsuario());
+        verificarProfissionalSaude.validarMatriculaNaoVazia(dto.getMatricula());
+        verificarProfissionalSaude.validarRegistroConselhoNaoVazio(dto.getRegistroConselho());
         
-        if (dto.getMatricula() == null || dto.getMatricula().trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
-        
-        if (dto.getRegistroConselho() == null || dto.getRegistroConselho().trim().isEmpty()) {
-            throw new BusinessException("Registro do conselho não pode ser vazio");
-        }
-        
-        // Verifica se a matrícula já existe
-        if (profissionalRepository.findByMatricula(dto.getMatricula()).isPresent()) {
-            systemLogService.registrarErro(
-                null,
-                "ProfissionalSaude",
-                "Tentativa de criar profissional com matrícula duplicada: " + dto.getMatricula()
-            );
-            throw new BusinessException("Já existe um profissional cadastrado com a matrícula %s", dto.getMatricula());
-        }
-        
-        // Verifica se o registro do conselho já existe
-        if (profissionalRepository.findByRegistroConselho(dto.getRegistroConselho()).isPresent()) {
-            systemLogService.registrarErro(
-                null,
-                "ProfissionalSaude",
-                "Tentativa de criar profissional com registro de conselho duplicado: " + dto.getRegistroConselho()
-            );
-            throw new BusinessException("Já existe um profissional cadastrado com o registro de conselho %s", dto.getRegistroConselho());
-        }
+        // Verifica duplicidades
+        verificarProfissionalSaude.verificarMatriculaDuplicada(dto.getMatricula());
+        verificarProfissionalSaude.verificarRegistroConselhoDuplicado(dto.getRegistroConselho());
         
         ProfissionalSaude profissionalSaude = ProfissionalSaudeMapper.toEntity(dto);
         
         // Recupera o usuário
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> {
-                    systemLogService.registrarErro(
-                        null,
-                        "ProfissionalSaude",
-                        "Tentativa de criar profissional com usuário inexistente: ID " + dto.getIdUsuario()
-                    );
-                    return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-                });
-        
+        Usuario usuario = verificarProfissionalSaude.buscarUsuarioPorId(dto.getIdUsuario());
         profissionalSaude.setUsuario(usuario);
         
         // Geração do ID do Profissional de Saúde
@@ -92,7 +59,7 @@ public class ProfissionalSaudeService {
         return ProfissionalSaudeMapper.toResponseDTO(salvo);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ProfissionalSaudeResponse> listarTodos() {
         return profissionalRepository.findAll()
                 .stream()
@@ -100,72 +67,44 @@ public class ProfissionalSaudeService {
                 .collect(Collectors.toList());
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public ProfissionalSaudeResponse buscarPorIdProfissional(Integer idProfissional) {
-        if (idProfissional == null) {
-            throw new BusinessException("ID do profissional não pode ser nulo");
-        }
-        
-        return profissionalRepository.findByIdProfissional(idProfissional)
-                .map(ProfissionalSaudeMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Profissional de saúde com ID %d não encontrado", idProfissional));
+        ProfissionalSaude profissional = verificarProfissionalSaude.buscarProfissionalPorId(idProfissional);
+        return ProfissionalSaudeMapper.toResponseDTO(profissional);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public ProfissionalSaudeResponse buscarPorMatricula(String matricula) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
-        
-        return profissionalRepository.findByMatricula(matricula)
-                .map(ProfissionalSaudeMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Profissional de saúde com matrícula %s não encontrado", matricula));
+        ProfissionalSaude profissional = verificarProfissionalSaude.buscarProfissionalPorMatricula(matricula);
+        return ProfissionalSaudeMapper.toResponseDTO(profissional);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public ProfissionalSaudeResponse buscarPorRegistroConselho(String registroConselho) {
-        if (registroConselho == null || registroConselho.trim().isEmpty()) {
-            throw new BusinessException("Registro do conselho não pode ser vazio");
-        }
-        
-        return profissionalRepository.findByRegistroConselho(registroConselho)
-                .map(ProfissionalSaudeMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Profissional de saúde com registro de conselho %s não encontrado", registroConselho));
+        ProfissionalSaude profissional = verificarProfissionalSaude.buscarProfissionalPorRegistroConselho(registroConselho);
+        return ProfissionalSaudeMapper.toResponseDTO(profissional);
     }
     
     @Transactional
     public ProfissionalSaudeResponse atualizar(String matricula, ProfissionalSaudeRequest dto) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
+        verificarProfissionalSaude.validarMatriculaNaoVazia(matricula);
+        verificarProfissionalSaude.validarIdUsuarioNaoNulo(dto.getIdUsuario());
         
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
-        
-        ProfissionalSaude profissionalSaude = profissionalRepository.findByMatricula(matricula)
-                .orElseThrow(() -> new BusinessException("Profissional de saúde com matrícula %s não encontrado", matricula));
+        ProfissionalSaude profissionalSaude = verificarProfissionalSaude.buscarProfissionalPorMatricula(matricula);
         
         // Verifica se a nova matrícula já existe (se for diferente da atual)
-        if (!dto.getMatricula().equals(matricula) && profissionalRepository.findByMatricula(dto.getMatricula()).isPresent()) {
-            systemLogService.registrarErro(
-                profissionalSaude.getIdProfissional(),
-                "ProfissionalSaude",
-                "Tentativa de atualizar para matrícula duplicada: " + dto.getMatricula()
-            );
-            throw new BusinessException("Já existe um profissional cadastrado com a matrícula %s", dto.getMatricula());
-        }
+        verificarProfissionalSaude.verificarMatriculaDuplicadaAtualizacao(
+            matricula, 
+            dto.getMatricula(), 
+            profissionalSaude.getIdProfissional()
+        );
         
         // Verifica se o novo registro do conselho já existe (se for diferente do atual)
-        if (!dto.getRegistroConselho().equals(profissionalSaude.getRegistroConselho()) && 
-            profissionalRepository.findByRegistroConselho(dto.getRegistroConselho()).isPresent()) {
-            systemLogService.registrarErro(
-                profissionalSaude.getIdProfissional(),
-                "ProfissionalSaude",
-                "Tentativa de atualizar para registro de conselho duplicado: " + dto.getRegistroConselho()
-            );
-            throw new BusinessException("Já existe um profissional cadastrado com o registro de conselho %s", dto.getRegistroConselho());
-        }
+        verificarProfissionalSaude.verificarRegistroConselhoDuplicadoAtualizacao(
+            profissionalSaude.getRegistroConselho(),
+            dto.getRegistroConselho(),
+            profissionalSaude.getIdProfissional()
+        );
         
         profissionalSaude.setMatricula(dto.getMatricula());
         profissionalSaude.setRegistroConselho(dto.getRegistroConselho());
@@ -174,16 +113,10 @@ public class ProfissionalSaudeService {
         profissionalSaude.setUnidade(dto.getUnidade());
         
         // Atualiza o usuário vinculado
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> {
-                    systemLogService.registrarErro(
-                        profissionalSaude.getIdProfissional(),
-                        "ProfissionalSaude",
-                        "Tentativa de atualizar profissional com usuário inexistente: ID " + dto.getIdUsuario()
-                    );
-                    return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-                });
-        
+        Usuario usuario = verificarProfissionalSaude.buscarUsuarioPorIdAtualizacao(
+            dto.getIdUsuario(), 
+            profissionalSaude.getIdProfissional()
+        );
         profissionalSaude.setUsuario(usuario);
         
         ProfissionalSaude atualizado = profissionalRepository.save(profissionalSaude);
@@ -200,13 +133,9 @@ public class ProfissionalSaudeService {
     
     @Transactional
     public void deletar(String matricula) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
+        verificarProfissionalSaude.validarMatriculaNaoVazia(matricula);
         
-        ProfissionalSaude profissionalSaude = profissionalRepository.findByMatricula(matricula)
-                .orElseThrow(() -> new BusinessException("Profissional de saúde com matrícula %s não encontrado", matricula));
-        
+        ProfissionalSaude profissionalSaude = verificarProfissionalSaude.buscarProfissionalPorMatricula(matricula);
         Integer idProfissional = profissionalSaude.getIdProfissional();
         
         profissionalRepository.delete(profissionalSaude);
@@ -225,29 +154,27 @@ public class ProfissionalSaudeService {
         int tentativas = 0;
         int maxTentativas = 1000;
         
+        verificarProfissionalSaude.validarIdUsuarioParaGeracao(idUsuario);
+        
         String idUsuarioStr = String.valueOf(idUsuario);
-        
-        if (idUsuarioStr.length() < 3) {
-            throw new BusinessException("ID do usuário inválido para geração de ID do profissional");
-        }
-        
         String prefixo = idUsuarioStr.substring(0, 3);
         
         while (tentativas < maxTentativas) {
             String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             Integer idProfissional = Integer.parseInt(prefixo + numeroAleatorio);
             
-            if (!profissionalRepository.existsById(idProfissional)) {
+            if (!verificarProfissionalSaude.idProfissionalExiste(idProfissional)) {
                 return idProfissional;
             }
             tentativas++;
         }
         
-        systemLogService.registrarErro(
-            null,
+        // Se chegou aqui, não conseguiu gerar ID único após todas as tentativas
+        throw new BusinessException(
+            100,
             "ProfissionalSaude",
-            "Não foi possível gerar ID único para profissional após " + maxTentativas + " tentativas"
+            "Não foi possível gerar um ID único para o profissional de saúde após %d tentativas. Tente novamente.",
+            maxTentativas
         );
-        throw new BusinessException("Não foi possível gerar um ID único para o profissional de saúde. Tente novamente.");
     }
 }

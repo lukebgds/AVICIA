@@ -10,9 +10,9 @@ import com.avicia.api.data.dto.request.role.RoleRequest;
 import com.avicia.api.data.dto.response.role.CriarRoleResponse;
 import com.avicia.api.data.dto.response.role.RoleResponse;
 import com.avicia.api.data.mapper.RoleMapper;
-import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.Role;
 import com.avicia.api.repository.RoleRepository;
+import com.avicia.api.security.verify.VerificarRole;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,72 +22,30 @@ public class RoleService {
     
     private final RoleRepository roleRepository;
     private final SystemLogService systemLogService;
+    private final VerificarRole verificarRole;
     
     @Transactional
     public CriarRoleResponse criar(RoleRequest dto) {
-        // Valida nome
-        if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
-            throw new BusinessException("Nome da role não pode ser vazio");
-        }
         
-        // Verifica se já existe uma role com o mesmo nome
-        if (roleRepository.findByNome(dto.getNome()).isPresent()) {
-            systemLogService.registrarErro(
-                null,
-                "Role",
-                "Tentativa de criar role com nome duplicado: " + dto.getNome()
-            );
-            throw new BusinessException("Já existe uma role com o nome '%s'", dto.getNome());
-        }
+        // Validações
+        verificarRole.validarNomeNaoVazio(dto.getNome());
+        verificarRole.verificarNomeDuplicado(dto.getNome());
         
         // Verifica se a role base existe pelo ID
-        Role findRole = roleRepository.findById(dto.getIdTipoRole())
-            .orElseThrow(() -> {
-                systemLogService.registrarErro(
-                    null,
-                    "Role",
-                    "Tentativa de criar role com tipo inexistente: ID " + dto.getIdTipoRole()
-                );
-                return new BusinessException("Role base com ID %d não encontrada", dto.getIdTipoRole());
-            });
-        
+        Role findRole = verificarRole.buscarRolePorId(dto.getIdTipoRole());
         Integer idRoleBase = findRole.getIdRole();
         
         // Determina a faixa com base no ID da role base
-        int faixaMin = (idRoleBase / 100) * 100 + 1;
-        int faixaMax = faixaMin + 98;
+        int[] faixa = verificarRole.calcularFaixa(idRoleBase);
+        int faixaMin = faixa[0];
+        int faixaMax = faixa[1];
         
         // Verifica se a faixa é válida
-        if (!isFaixaValida(faixaMin, faixaMax)) {
-            // Log de erro (faixa inválida)
-            systemLogService.registrarErro(
-                null,
-                "Role",
-                "Tentativa de criar role com faixa inválida: [" + faixaMin + "–" + faixaMax + "]"
-            );
-            
-            throw new BusinessException(
-                "Faixa de IDs inválida [%d–%d]. Permitidas apenas: [101–199], [301–399], [501–599], [701–799]",
-                faixaMin, faixaMax
-            );
-        }
+        verificarRole.validarFaixaValida(faixaMin, faixaMax);
         
         // Encontra o próximo ID disponível dentro da faixa
-        Integer idRole = findNextAvailableId(faixaMin, faixaMax);
-        
-        if (idRole == null) {
-            // Log de erro (sem IDs disponíveis)
-            systemLogService.registrarErro(
-                null,
-                "Role",
-                "Não há IDs disponíveis na faixa [" + faixaMin + "–" + faixaMax + "]"
-            );
-            
-            throw new BusinessException(
-                "Não há IDs disponíveis na faixa %d–%d",
-                faixaMin, faixaMax
-            );
-        }
+        Integer idRole = verificarRole.findNextAvailableId(faixaMin, faixaMax);
+        verificarRole.validarIdDisponivel(idRole, faixaMin, faixaMax);
         
         Role role = RoleMapper.toEntity(dto, idRole);
         Role salvo = roleRepository.save(role);
@@ -102,7 +60,7 @@ public class RoleService {
         return RoleMapper.toCriarResponseDTO(salvo);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public List<RoleResponse> listarTodos() {
         return roleRepository.findAll()
                 .stream()
@@ -110,39 +68,22 @@ public class RoleService {
                 .collect(Collectors.toList());
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public RoleResponse buscarPorNome(String nome) {
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new BusinessException("Nome da role não pode ser vazio");
-        }
-        
-        return roleRepository.findByNome(nome)
-                .map(RoleMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Role com nome '%s' não encontrada", nome));
+        Role role = verificarRole.buscarRolePorNome(nome);
+        return RoleMapper.toResponseDTO(role);
     }
     
     @Transactional
     public RoleResponse atualizar(String nome, RoleRequest dto) {
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new BusinessException("Nome da role não pode ser vazio");
-        }
         
-        if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
-            throw new BusinessException("Novo nome da role não pode ser vazio");
-        }
+        verificarRole.validarNomeNaoVazio(nome);
+        verificarRole.validarNovoNomeNaoVazio(dto.getNome());
         
-        Role role = roleRepository.findByNome(nome)
-                .orElseThrow(() -> new BusinessException("Role com nome '%s' não encontrada", nome));
+        Role role = verificarRole.buscarRolePorNome(nome);
         
         // Verifica se o novo nome já existe (se for diferente do atual)
-        if (!dto.getNome().equals(nome) && roleRepository.findByNome(dto.getNome()).isPresent()) {
-            systemLogService.registrarErro(
-                role.getIdRole(),
-                "Role",
-                "Tentativa de atualizar para nome duplicado: " + dto.getNome()
-            );
-            throw new BusinessException("Já existe uma role com o nome '%s'", dto.getNome());
-        }
+        verificarRole.verificarNomeDuplicadoAtualizacao(nome, dto.getNome(), role.getIdRole());
         
         role.setNome(dto.getNome());
         role.setDescricao(dto.getDescricao());
@@ -162,13 +103,10 @@ public class RoleService {
     
     @Transactional
     public void deletar(String nome) {
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new BusinessException("Nome da role não pode ser vazio");
-        }
         
-        Role role = roleRepository.findByNome(nome)
-                .orElseThrow(() -> new BusinessException("Role com nome '%s' não encontrada", nome));
+        verificarRole.validarNomeNaoVazio(nome);
         
+        Role role = verificarRole.buscarRolePorNome(nome);
         Integer idRole = role.getIdRole();
         
         roleRepository.delete(role);
@@ -179,25 +117,5 @@ public class RoleService {
             "Role",
             "Role '" + nome + "' com ID " + idRole + " foi deletada"
         );
-    }
-    
-    // ================= MÉTODOS AUXILIARES ================= //
-    
-    // Verifica se a faixa é uma das permitidas.
-    private boolean isFaixaValida(int faixaMin, int faixaMax) {
-        return (faixaMin == 101 && faixaMax == 199)
-            || (faixaMin == 301 && faixaMax == 399)
-            || (faixaMin == 501 && faixaMax == 599)
-            || (faixaMin == 701 && faixaMax == 799);
-    }
-    
-    // Procura o próximo ID livre dentro da faixa.
-    private Integer findNextAvailableId(int faixaMin, int faixaMax) {
-        for (int id = faixaMin; id <= faixaMax; id++) {
-            if (!roleRepository.existsById(id)) {
-                return id;
-            }
-        }
-        return null; // Nenhum ID disponível
     }
 }

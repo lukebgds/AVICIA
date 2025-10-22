@@ -1,7 +1,6 @@
 package com.avicia.api.service;
 
 import java.util.List;
-
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -16,8 +15,8 @@ import com.avicia.api.data.mapper.UsuarioMapper;
 import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.Role;
 import com.avicia.api.model.Usuario;
-import com.avicia.api.repository.RoleRepository;
 import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.security.verify.VerificarUsuario;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,55 +25,26 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final RoleRepository roleRepository;
     private final Argon2PasswordEncoder passwordEncoder;
     private final SystemLogService systemLogService;
+    private final VerificarUsuario verificarUsuario;
 
     @Transactional
     public CriarUsuarioResponse criar(UsuarioRequest dto) {
         
-        // Valida CPF
-        if (dto.getCpf() == null || dto.getCpf().trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
-        
-        // Verifica se o CPF já existe
-        if (usuarioRepository.findByCpf(dto.getCpf()).isPresent()) {
-            systemLogService.registrarErro(
-                100,
-                "Usuario",
-                "Tentativa de criar usuário com CPF duplicado: " + dto.getCpf()
-            );
-            throw new BusinessException("Já existe um usuário cadastrado com o CPF %s", dto.getCpf());
-        }
-        
-        // Valida senha
-        if (dto.getSenha() == null || dto.getSenha().trim().isEmpty()) {
-            throw new BusinessException("Senha não pode ser vazia");
-        }
-        
-        if (dto.getSenha().length() < 8) {
-            throw new BusinessException("Senha deve ter no mínimo 8 caracteres");
-        }
+        // Validações
+        verificarUsuario.validarCpfNaoVazio(dto.getCpf());
+        verificarUsuario.verificarCpfDuplicado(dto.getCpf(), null);
+        verificarUsuario.validarSenha(dto.getSenha());
         
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        // Verifica se a role existe pelo ID
-        Role role = roleRepository.findById(dto.getIdRole())
-            .orElseThrow(() -> {
-                systemLogService.registrarErro(
-                    100,
-                    "Usuario",
-                    "Tentativa de criar usuário com role inexistente: ID " + dto.getIdRole()
-                );
-                return new BusinessException("Role com ID %d não encontrada", dto.getIdRole());
-            });
-        
+        // Verifica se a role existe
+        Role role = verificarUsuario.verificarRoleExiste(dto.getIdRole(), null);
         usuario.setIdRole(role);
 
-        // Geração do ID do usuário: ID da role + número aleatório de 6 dígitos
+        // Geração do ID do usuário
         Integer idGerado = gerarIdUnico(role.getIdRole());
-        
         usuario.setIdUsuario(idGerado);
 
         // Criptografia da senha
@@ -102,41 +72,22 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponse buscaPorCpf(String cpf) {
-        return usuarioRepository.findByCpf(cpf)
-                .map(UsuarioMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Usuário com CPF %s não encontrado", cpf));
+        Usuario usuario = verificarUsuario.buscarUsuarioPorCpf(cpf);
+        return UsuarioMapper.toResponseDTO(usuario);
     }
 
     @Transactional
     public UsuarioResponse atualizar(String cpf, UsuarioRequest dto) {
         
-        if (cpf == null || cpf.trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
+        verificarUsuario.validarCpfNaoVazio(cpf);
         
-        Usuario existing = usuarioRepository.findByCpf(cpf)
-                .orElseThrow(() -> new BusinessException("Usuário com CPF %s não encontrado", cpf));
+        Usuario existing = verificarUsuario.buscarUsuarioPorCpf(cpf);
 
         // Verifica se o novo CPF já existe (se for diferente do atual)
-        if (!dto.getCpf().equals(cpf) && usuarioRepository.findByCpf(dto.getCpf()).isPresent()) {
-            systemLogService.registrarErro(
-                existing.getIdUsuario(),
-                "Usuario",
-                "Tentativa de atualizar para CPF duplicado: " + dto.getCpf()
-            );
-            throw new BusinessException("Já existe um usuário cadastrado com o CPF %s", dto.getCpf());
-        }
+        verificarUsuario.verificarCpfDuplicadoAtualizacao(cpf, dto.getCpf(), existing.getIdUsuario());
 
         // Verifica se a role existe
-        Role role = roleRepository.findById(dto.getIdRole())
-            .orElseThrow(() -> {
-                systemLogService.registrarErro(
-                    existing.getIdUsuario(),
-                    "Usuario",
-                    "Tentativa de atualizar usuário com role inexistente: ID " + dto.getIdRole()
-                );
-                return new BusinessException("Role com ID %d não encontrada", dto.getIdRole());
-            });
+        Role role = verificarUsuario.verificarRoleExiste(dto.getIdRole(), existing.getIdUsuario());
 
         Usuario usuario = UsuarioMapper.toEntity(dto);
         usuario.setIdUsuario(existing.getIdUsuario());
@@ -159,41 +110,15 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponse atualizarSenha(String cpf, String senhaAtual, String senhaNova) {
         
-        // FAZER COMPRESSÃO DISSO DEPOIS
-
-        if (cpf == null || cpf.trim().isEmpty()) {
-            throw new BusinessException("CPF não pode ser vazio");
-        }
+        verificarUsuario.validarCpfNaoVazio(cpf);
+        verificarUsuario.validarSenha(senhaAtual);
+        verificarUsuario.validarSenha(senhaNova);
+        verificarUsuario.validarSenhaDiferente(senhaAtual, senhaNova);
         
-        if (senhaAtual == null || senhaAtual.trim().isEmpty()) {
-            throw new BusinessException("Senha atual não pode ser vazia");
-        }
-        
-        if (senhaNova == null || senhaNova.trim().isEmpty()) {
-            throw new BusinessException("Nova senha não pode ser vazia");
-        }
-        
-        if (senhaNova.length() < 8) {
-            throw new BusinessException("Nova senha deve ter no mínimo 8 caracteres");
-        }
-        
-        if (senhaAtual.equals(senhaNova)) {
-            throw new BusinessException("A nova senha deve ser diferente da senha atual");
-        }
-        
-        Usuario usuario = usuarioRepository.findByCpf(cpf)
-                .orElseThrow(() -> new BusinessException("Usuário com CPF %s não encontrado", cpf));
+        Usuario usuario = verificarUsuario.buscarUsuarioPorCpf(cpf);
         
         // Verifica se a senha atual está correta
-        if(!passwordEncoder.matches(senhaAtual, usuario.getSenhaHash())) {
-            // Log de erro (senha incorreta)
-            systemLogService.registrarErro(
-                usuario.getIdUsuario(),
-                "Usuario",
-                "Tentativa de alteração de senha falhou — senha atual incorreta"
-            );
-            throw new BusinessException("Senha atual incorreta");
-        }
+        verificarUsuario.verificarSenhaAtual(senhaAtual, usuario.getSenhaHash(), usuario.getIdUsuario());
 
         // Criptografa a senha nova
         usuario.setSenhaHash(passwordEncoder.encode(senhaNova));
@@ -213,12 +138,7 @@ public class UsuarioService {
     @Transactional
     public void deletar(Integer idUsuario) {
         
-        if (idUsuario == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
-        
-        Usuario usuario = usuarioRepository.findByIdUsuario(idUsuario)
-                .orElseThrow(() -> new BusinessException("Usuário com ID %d não encontrado", idUsuario));
+        Usuario usuario = verificarUsuario.buscarUsuarioPorId(idUsuario);
         
         usuarioRepository.delete(usuario);
 
@@ -242,7 +162,7 @@ public class UsuarioService {
             String idGeradoStr = idRole + numeroAleatorio;
             Integer idGerado = Integer.parseInt(idGeradoStr);
             
-            if (!usuarioRepository.existsById(idGerado)) {
+            if (!verificarUsuario.idUsuarioExiste(idGerado)) {
                 return idGerado;
             }
             tentativas++;

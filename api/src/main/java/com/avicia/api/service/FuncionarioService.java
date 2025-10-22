@@ -14,7 +14,7 @@ import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.Funcionario;
 import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.FuncionarioRepository;
-import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.security.verify.VerificarFuncionario;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,44 +23,22 @@ import lombok.RequiredArgsConstructor;
 public class FuncionarioService {
     
     private final FuncionarioRepository funcionarioRepository;
-    private final UsuarioRepository usuarioRepository;
     private final SystemLogService systemLogService;
+    private final VerificarFuncionario verificarFuncionario;
     
     @Transactional
     public FuncionarioResponse criar(FuncionarioRequest dto) {
-        
         // Validações
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
-        
-        if (dto.getMatricula() == null || dto.getMatricula().trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
+        verificarFuncionario.validarIdUsuarioNaoNulo(dto.getIdUsuario());
+        verificarFuncionario.validarMatriculaNaoVazia(dto.getMatricula());
         
         // Verifica se a matrícula já existe
-        if (funcionarioRepository.findByMatricula(dto.getMatricula()).isPresent()) {
-            systemLogService.registrarErro(
-                null,
-                "Funcionario",
-                "Tentativa de criar funcionário com matrícula duplicada: " + dto.getMatricula()
-            );
-            throw new BusinessException("Já existe um funcionário cadastrado com a matrícula %s", dto.getMatricula());
-        }
+        verificarFuncionario.verificarMatriculaDuplicada(dto.getMatricula());
         
         Funcionario funcionario = FuncionarioMapper.toEntity(dto);
         
         // Recupera o usuário
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> {
-                    systemLogService.registrarErro(
-                        null,
-                        "Funcionario",
-                        "Tentativa de criar funcionário com usuário inexistente: ID " + dto.getIdUsuario()
-                    );
-                    return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-                });
-        
+        Usuario usuario = verificarFuncionario.buscarUsuarioPorId(dto.getIdUsuario());
         funcionario.setUsuario(usuario);
         
         // Geração do ID do Funcionário
@@ -79,7 +57,7 @@ public class FuncionarioService {
         return FuncionarioMapper.toResponseDTO(salvo);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public List<FuncionarioResponse> listarTodos() {
         return funcionarioRepository.findAll()
                 .stream()
@@ -87,50 +65,31 @@ public class FuncionarioService {
                 .collect(Collectors.toList());
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public FuncionarioResponse buscarPorId(Integer idFuncionario) {
-        if (idFuncionario == null) {
-            throw new BusinessException("ID do funcionário não pode ser nulo");
-        }
-        
-        return funcionarioRepository.findById(idFuncionario)
-                .map(FuncionarioMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Funcionário com ID %d não encontrado", idFuncionario));
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorId(idFuncionario);
+        return FuncionarioMapper.toResponseDTO(funcionario);
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public FuncionarioResponse buscarPorMatricula(String matricula) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
-        
-        return funcionarioRepository.findByMatricula(matricula)
-                .map(FuncionarioMapper::toResponseDTO)
-                .orElseThrow(() -> new BusinessException("Funcionário com matrícula %s não encontrado", matricula));
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
+        return FuncionarioMapper.toResponseDTO(funcionario);
     }
     
     @Transactional
     public FuncionarioResponse atualizar(String matricula, FuncionarioRequest dto) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
+        verificarFuncionario.validarMatriculaNaoVazia(matricula);
+        verificarFuncionario.validarIdUsuarioNaoNulo(dto.getIdUsuario());
         
-        if (dto.getIdUsuario() == null) {
-            throw new BusinessException("ID do usuário não pode ser nulo");
-        }
-        
-        Funcionario funcionario = funcionarioRepository.findByMatricula(matricula)
-                .orElseThrow(() -> new BusinessException("Funcionário com matrícula %s não encontrado", matricula));
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
         
         // Verifica se a nova matrícula já existe (se for diferente da atual)
-        if (!dto.getMatricula().equals(matricula) && funcionarioRepository.findByMatricula(dto.getMatricula()).isPresent()) {
-            systemLogService.registrarErro(
-                funcionario.getIdFuncionario(),
-                "Funcionario",
-                "Tentativa de atualizar para matrícula duplicada: " + dto.getMatricula()
-            );
-            throw new BusinessException("Já existe um funcionário cadastrado com a matrícula %s", dto.getMatricula());
-        }
+        verificarFuncionario.verificarMatriculaDuplicadaAtualizacao(
+            matricula,
+            dto.getMatricula(),
+            funcionario.getIdFuncionario()
+        );
         
         funcionario.setCargo(dto.getCargo());
         funcionario.setSetor(dto.getSetor());
@@ -138,16 +97,10 @@ public class FuncionarioService {
         funcionario.setObservacoes(dto.getObservacoes());
         
         // Atualiza o usuário vinculado
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> {
-                    systemLogService.registrarErro(
-                        funcionario.getIdFuncionario(),
-                        "Funcionario",
-                        "Tentativa de atualizar funcionário com usuário inexistente: ID " + dto.getIdUsuario()
-                    );
-                    return new BusinessException("Usuário com ID %d não encontrado", dto.getIdUsuario());
-                });
-        
+        Usuario usuario = verificarFuncionario.buscarUsuarioPorIdAtualizacao(
+            dto.getIdUsuario(),
+            funcionario.getIdFuncionario()
+        );
         funcionario.setUsuario(usuario);
         
         Funcionario atualizado = funcionarioRepository.save(funcionario);
@@ -164,13 +117,9 @@ public class FuncionarioService {
     
     @Transactional
     public void deletar(String matricula) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new BusinessException("Matrícula não pode ser vazia");
-        }
+        verificarFuncionario.validarMatriculaNaoVazia(matricula);
         
-        Funcionario funcionario = funcionarioRepository.findByMatricula(matricula)
-                .orElseThrow(() -> new BusinessException("Funcionário com matrícula %s não encontrado", matricula));
-        
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
         Integer idFuncionario = funcionario.getIdFuncionario();
         
         funcionarioRepository.delete(funcionario);
@@ -189,29 +138,27 @@ public class FuncionarioService {
         int tentativas = 0;
         int maxTentativas = 1000;
         
+        verificarFuncionario.validarIdUsuarioParaGeracao(idUsuario);
+        
         String idUsuarioStr = String.valueOf(idUsuario);
-        
-        if (idUsuarioStr.length() < 3) {
-            throw new BusinessException("ID do usuário inválido para geração de ID do funcionário");
-        }
-        
         String prefixo = idUsuarioStr.substring(0, 3);
         
         while (tentativas < maxTentativas) {
             String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
             Integer idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
             
-            if (!funcionarioRepository.existsById(idFuncionario)) {
+            if (!verificarFuncionario.idFuncionarioExiste(idFuncionario)) {
                 return idFuncionario;
             }
             tentativas++;
         }
         
-        systemLogService.registrarErro(
-            null,
+        // Se chegou aqui, não conseguiu gerar ID único após todas as tentativas
+        throw new BusinessException(
+            100,
             "Funcionario",
-            "Não foi possível gerar ID único para funcionário após " + maxTentativas + " tentativas"
+            "Não foi possível gerar um ID único para o funcionário após %d tentativas. Tente novamente.",
+            maxTentativas
         );
-        throw new BusinessException("Não foi possível gerar um ID único para o funcionário. Tente novamente.");
     }
 }
