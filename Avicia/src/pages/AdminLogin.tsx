@@ -159,7 +159,7 @@ const AdminLogin = () => {
 
         <Card className="shadow-2xl border border-destructive/20 bg-white/95 backdrop-blur-sm rounded-2xl w-full">
           <CardHeader className="text-center py-4">
-            <CardTitle className="text-3xl font-semibold text-destructive flex items-center justify-center gap-2 relative right-3">
+            <CardTitle className="text-3xl font-semibold text-destructive flex items-center justify-center gap-2 relative right-2">
               <Shield className="h-7 w-7" />
               Acesso Restrito
             </CardTitle>

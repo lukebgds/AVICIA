@@ -311,7 +311,7 @@ const Cadastro = () => {
 
         <Card className="shadow-2xl border border-blue-200/50 bg-white/95 backdrop-blur-sm rounded-2xl w-full">
           <CardHeader className="text-center py-4">
-            <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2 relative right-3">
+            <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2 relative right-2">
               <User className="h-7 w-7" /> Criar Conta
             </CardTitle>
           </CardHeader>
