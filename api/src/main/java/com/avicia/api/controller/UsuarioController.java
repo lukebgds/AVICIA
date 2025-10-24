@@ -7,9 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.request.AlterarSenhaRequest;
-import com.avicia.api.data.dto.request.UsuarioRequest;
-import com.avicia.api.data.dto.response.UsuarioResponse;
+import com.avicia.api.data.dto.request.senha.AlterarSenhaRequest;
+import com.avicia.api.data.dto.request.usuario.UsuarioRequest;
+import com.avicia.api.data.dto.response.usuario.CriarUsuarioResponse;
+import com.avicia.api.data.dto.response.usuario.UsuarioResponse;
 import com.avicia.api.service.UsuarioService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class UsuarioController {
     private UsuarioService usuarioService;
     
     @PostMapping("/cadastro")// localhost:9081/api/usuarios
-    public ResponseEntity<UsuarioResponse> criar(@RequestBody UsuarioRequest dto) {
+    public ResponseEntity<CriarUsuarioResponse> criar(@RequestBody UsuarioRequest dto) {
         return ResponseEntity.ok(usuarioService.criar(dto));
     }
 
@@ -40,39 +41,27 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
     
-    @GetMapping("/{cpf}") // localhost:9081/api/usuarios/{cpf}
+    @GetMapping("/{cpf}")
     public ResponseEntity<UsuarioResponse> buscarPorCpf(@PathVariable String cpf) {
-        
-        return usuarioService.buscaPorCpf(cpf)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(usuarioService.buscaPorCpf(cpf));
     }
 
     @PutMapping("/{cpf}") // localhost:9081/api/usuarios/{cpf}
     public ResponseEntity<UsuarioResponse> atualizar(@PathVariable String cpf, @RequestBody UsuarioRequest dto) {
-        
-        return usuarioService.atualizar(cpf, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-
+        return ResponseEntity.ok(usuarioService.atualizar(cpf, dto));
     }
 
     // localhost:9081/api/usuarios/{cpf}/senha
     @PutMapping("/{cpf}/senha")
     public ResponseEntity<UsuarioResponse> atualizarSenha(@PathVariable String cpf, @RequestBody AlterarSenhaRequest request) {
-        
-        return usuarioService.atualizarSenha(cpf, request.senhaAtual(), request.senhaNova())
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+        UsuarioResponse usuario = usuarioService.atualizarSenha(cpf, request.senhaAtual(), request.senhaNova());
+        return ResponseEntity.ok(usuario);
     }
 
     @DeleteMapping("/{idUsuario}") // localhost:9081/api/usuarios/{cpf}
     public ResponseEntity<Void> deletar(@PathVariable Integer idUsuario) {
-
-        boolean deletado = usuarioService.deletar(idUsuario);
-
-        return deletado ? ResponseEntity.noContent().build()
-                        : ResponseEntity.notFound().build();
+        usuarioService.deletar(idUsuario);
+        return ResponseEntity.noContent().build();
     }
 
 }

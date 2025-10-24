@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:latest
-    container_name: meu_postgres
+    container_name: AVICIA_postgres_db
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -10,11 +10,59 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/roles.sql:/docker-entrypoint-initdb.d/roles.sql
       - ./database/insert.sql:/docker-entrypoint-initdb.d/insert.sql
+    networks:
+      - devnet
+
+  backend:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: AVICIA_backend_app
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/teste_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true" 
+    volumes:
+      - ../api:/app
+    ports:
+      - "9081:9081"
+    networks:
+      - devnet
+
+  frontend:
+    build:
+      context: ../Avicia
+      dockerfile: Dockerfile
+    container_name: AVICIA_frontend_app
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://backend:9081
+    volumes:
+      - ../Avicia:/app:cached
+      - frontend_node:/app/node_modules
+    ports:
+      - "8080:8080"
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge
+
 volumes:
-  pgdata:
-    name: meu_postgres_data
-    driver: local
+  postgres_data:
+  frontend_node:

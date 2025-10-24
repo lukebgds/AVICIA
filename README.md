@@ -1,24 +1,19 @@
 # AVICIA
 
 ## 📋 Pré-requisitos
-
 Antes de executar o projeto, certifique-se de ter instalado em sua máquina:
-
 - **Docker Desktop** e **Docker Compose**
-- **OpenSSL**
+- **OpenSSL** (necessário para gerar as chaves RSA)
 
 ---
 
 ## 🔑 Gerando chaves RSA (necessário para o backend)
-
 O backend utiliza autenticação baseada em **JWT**, que depende de chaves RSA.  
-As chaves **não são versionadas** no repositório por questões de segurança, então você precisará gerá-las manualmente.
+As chaves **não são versionadas** no repositório por questões de segurança, então você precisará gerá-las manualmente **antes de iniciar o Docker Compose**.
 
 ### Passo a passo (Windows)
-
-1. Abra o **Prompt de Comando (cmd)** na pasta raiz do projeto `AVICIA`.  
+1. Abra o **Prompt de Comando (cmd)** na pasta raiz do projeto `AVICIA`.
 2. Execute os seguintes comandos:
-
 ```bash
 # 1. Criar a pasta onde as chaves ficarão armazenadas
 mkdir api\src\main\resources\keys
@@ -28,32 +23,21 @@ openssl genpkey -algorithm RSA -out api\src\main\resources\keys\private_key.pem 
 
 # 3. Gerar a chave pública (public_key.pem) a partir da chave privada
 openssl rsa -pubout -in api\src\main\resources\keys\private_key.pem -out api\src\main\resources\keys\public_key.pem
-
 ```
 
-## 🚀 Guia de execução
-
-Existem duas formas de iniciar o projeto:
-
-### 🔹 Opção 1 – Usando os scripts automatizados
-1. Execute o script **`Start-Project`** para iniciar a aplicação.
+**Nota:** As chaves serão montadas no container do backend via Docker Compose. Certifique-se de que elas estejam geradas antes de prosseguir.
 
 ---
 
-### 🔹 Opção 2 – Execução manual
-Caso ocorra algum problema com os scripts, siga os comandos abaixo manualmente no terminal:
+## 🚀 Guia de execução
+O projeto agora é executado de forma automatizada via **Docker Compose**, que cria e inicia os containers para o **backend**, **frontend** e **banco de dados** automaticamente. Não é mais necessário instalar dependências manualmente (como Maven, Node, Java ou npm), pois tudo é gerenciado pelos containers.
 
+1. Abra o **Prompt de Comando (cmd)** na pasta `docker`.
+2. Inicie os containers executando o seguinte comando:
 ```bash
-# 1. Subir containers do Docker (banco de dados e serviços necessários)
-cd ../docker
-docker-compose up -d
+docker compose up -d
+```
 
-# 2. Executar o backend (Spring Boot)
-cd ../api
-mvn spring-boot:run
-
-# 3. Iniciar o frontend em modo de desenvolvimento
-cd ../avicia
-npm run dev
-
-
+- O **frontend** estará disponível em `http://localhost:8080`
+- O **backend** estará disponível em `http://localhost:9081`
+- O **banco de dados** (PostgreSQL) estará acessível internamente via Docker.

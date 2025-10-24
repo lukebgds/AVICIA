@@ -19,6 +19,22 @@ interface Role {
   idRole: string;
 }
 
+interface Role {
+  idRole: string;
+  nome: string;
+  idTipoRole: number;
+  descricao: string;
+  permissoes: Record<string, string>;
+}
+
+// Interface para o input de criação (alinhada com o form)
+interface CreateRoleInput {
+  nome: string;
+  idTipoRole: number;
+  descricao: string;
+  permissoes: Record<string, string>;
+}
+
 interface Funcionario {
   idFuncionario: string;
 }
@@ -31,7 +47,6 @@ interface Profissional_saude {
 interface UsuariosResponse {
   idUsuario: number;
   nome: string;
-  sobrenome: string;
   cpf: string;
   email: string;
   telefone: string;
@@ -44,30 +59,23 @@ interface UsuariosResponse {
 // --- Interfaces de Entrada ---
 interface CreateUsuarioInput {
   nome: string;
-  sobrenome: string;
   cpf: string;
+  dataNascimento?: string;
+  sexo?: string;
+  estadoCivil?: string;
   email: string;
   senha: string;
   telefone?: string;
+  endereco?: string;
   ativo: boolean;
   mfaHabilitado: boolean;
   dataCriacao: string;
   idRole: string;
-  dataNascimento?: string;
-  sexo?: string;
-  estadoCivil?: string;
-  profissao?: string;
-  endereco?: string;
-  preferenciaContato?: string;
 }
 
 interface CreatePacienteInput {
   idUsuario: number;
-  dataNascimento: string;
-  sexo: string;
-  estadoCivil: string;
   profissao: string;
-  endereco: string;
   preferenciaContato: string;
 }
 
@@ -81,13 +89,12 @@ interface CreateFuncionarioInput {
 
 interface CreateProfissionalSaudeInput {
   idUsuario: number;
-  cargo: string;
-  unidade: string;
-  especialidade: string;
+  matricula: string;
   conselho: string;
   registroConselho: string;
-  matricula: string;
-  observacoes?: string;
+  especialidade: string;
+  cargo: string;
+  unidade: string;
 }
 
 interface LoginInput {
@@ -135,12 +142,10 @@ const apiFetch = async <T>(
       throw new Error(errorMessage || errorData.message);
     }
 
-    // Lidar com 204 No Content
     if (response.status === 204) {
-      return undefined as T; // Retorna undefined para respostas sem corpo
+      return undefined as T;
     }
 
-    // Verificar se a resposta é JSON
     const contentType = response.headers.get("Content-Type");
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
@@ -148,7 +153,6 @@ const apiFetch = async <T>(
       return data as T;
     }
 
-    // Para outros tipos de conteúdo, retornar undefined
     return undefined as T;
   } catch (error) {
     console.error(`❌🚀 Erro na requisição: ${endpoint}`, error);
@@ -206,6 +210,33 @@ export const api = {
     return pacienteCriado;
   },
 
+  criarRole: async (dados: CreateRoleInput): Promise<Role> => {
+    console.log("🛡️ Criando role:", dados);
+    const roleCriada = await apiFetch<Role>(
+      "/roles",
+      {
+        method: "POST",
+        body: JSON.stringify(dados),
+      },
+      true,
+      "Erro ao criar role"
+    );
+    console.log("✅🛡️ Role criada:", roleCriada);
+    return roleCriada;
+  },
+
+  getAllRoles: async (): Promise<Role[]> => {
+    console.log("🔍 Buscando todas as roles...");
+    const roles = await apiFetch<Role[]>(
+      "/roles",
+      { method: "GET" },
+      true,
+      "Erro ao buscar lista de roles"
+    );
+    console.log("✅🔍 Roles carregadas:", roles);
+    return roles;
+  },
+
   deleteUsuario: async (idUsuario: number): Promise<void> => {
     console.log("🗑️ Deletando usuário com ID:", idUsuario);
     await apiFetch<void>(
@@ -253,8 +284,6 @@ export const api = {
       false,
       "CPF ou senha incorretos"
     );
-    localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login paciente bem-sucedido:", resultado);
     return resultado;
   },
@@ -267,8 +296,6 @@ export const api = {
       false,
       "Nome ou senha incorretos"
     );
-    localStorage.setItem("token", resultado.accessToken);
-    localStorage.setItem("expiresIn", resultado.expiresIn);
     console.log("✅🔐 Login admin bem-sucedido:", resultado);
     return resultado;
   },

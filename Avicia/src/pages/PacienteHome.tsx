@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
@@ -23,8 +25,12 @@ import {
   Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const PacienteHome = () => {
+  useAuthGuard();
+  const { logout } = useAuth();
+  const { toast } = useToast();
   const [patientName] = useState("Nome do Paciente"); // Em um app real, isso viria do contexto de auth
   const navigate = useNavigate();
 
@@ -111,7 +117,14 @@ const PacienteHome = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  logout();
+                  toast({
+                    title: "Sessão encerrada",
+                    description: "Você saiu com segurança.",
+                  });
+                  navigate("/admin");
+                }}
                 className="hover:bg-blue-50"
               >
                 <LogOut className="h-5 w-5 text-gray-600" />

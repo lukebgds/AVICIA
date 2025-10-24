@@ -1,110 +1,164 @@
 package com.avicia.api.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.avicia.api.data.dto.request.FuncionarioRequest;
-import com.avicia.api.data.dto.response.FuncionarioResponse;
+import com.avicia.api.data.dto.request.funcionario.FuncionarioRequest;
+import com.avicia.api.data.dto.response.funcionario.FuncionarioResponse;
 import com.avicia.api.data.mapper.FuncionarioMapper;
+import com.avicia.api.exception.BusinessException;
 import com.avicia.api.model.Funcionario;
 import com.avicia.api.model.Usuario;
 import com.avicia.api.repository.FuncionarioRepository;
-import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.security.verify.VerificarFuncionario;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class FuncionarioService {
-
-    @Autowired
+    
     private final FuncionarioRepository funcionarioRepository;
-
-    @Autowired
-    private final UsuarioRepository usuarioRepository;
-
+    private final SystemLogService systemLogService;
+    private final VerificarFuncionario verificarFuncionario;
+    
+    @Transactional
     public FuncionarioResponse criar(FuncionarioRequest dto) {
-
+        // Validações
+        verificarFuncionario.validarIdUsuarioNaoNulo(dto.getIdUsuario());
+        verificarFuncionario.validarMatriculaNaoVazia(dto.getMatricula());
+        
+        // Verifica se a matrícula já existe
+        verificarFuncionario.verificarMatriculaDuplicada(dto.getMatricula());
+        
         Funcionario funcionario = FuncionarioMapper.toEntity(dto);
-
+        
         // Recupera o usuário
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        Usuario usuario = verificarFuncionario.buscarUsuarioPorId(dto.getIdUsuario());
         funcionario.setUsuario(usuario);
-
-        // Geração do ID do Funcionario:
-        String idUsuarioStr = String.valueOf(usuario.getIdUsuario());
-
-        // Pega os 3 primeiros dígitos
-        String prefixo = idUsuarioStr.substring(0, 3);
-
-        // Número aleatório de 3 dígitos
-        String numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
-
-        // Concatena e converte para Integer
-        Integer idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
-
-        // Garante unicidade
-        while (funcionarioRepository.existsById(idFuncionario)) {
-            numeroAleatorio = String.format("%03d", new Random().nextInt(1000));
-            idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
-        }
-		
-		funcionario.setIdFuncionario(idFuncionario);
+        
+        // Geração do ID do Funcionário
+        Integer idFuncionario = gerarIdUnicoFuncionario(usuario.getIdUsuario());
+        funcionario.setIdFuncionario(idFuncionario);
+        
         Funcionario salvo = funcionarioRepository.save(funcionario);
-		
+        
+        // Registro de log (Criação)
+        systemLogService.registrarCriacao(
+            salvo.getIdFuncionario(),
+            "Funcionario",
+            "Funcionário criado com ID " + salvo.getIdFuncionario() + " e matrícula " + salvo.getMatricula()
+        );
+        
         return FuncionarioMapper.toResponseDTO(salvo);
     }
-
+    
+    @Transactional(readOnly = true)
     public List<FuncionarioResponse> listarTodos() {
-
         return funcionarioRepository.findAll()
                 .stream()
                 .map(FuncionarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
-
-    public Optional<FuncionarioResponse> buscarPorId(Integer idFuncionario) {
-
-        return funcionarioRepository.findById(idFuncionario)
-                .map(FuncionarioMapper::toResponseDTO);
+    
+    @Transactional(readOnly = true)
+    public FuncionarioResponse buscarPorId(Integer idFuncionario) {
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorId(idFuncionario);
+        return FuncionarioMapper.toResponseDTO(funcionario);
     }
-
-    public Optional<FuncionarioResponse> buscarPorMatricula(String matricula) {
-
-        return funcionarioRepository.findByMatricula(matricula)
-                .map(FuncionarioMapper::toResponseDTO);
+    
+    @Transactional(readOnly = true)
+    public FuncionarioResponse buscarPorMatricula(String matricula) {
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
+        return FuncionarioMapper.toResponseDTO(funcionario);
     }
-
-    public Optional<FuncionarioResponse> atualizar(String matricula, FuncionarioRequest dto) {
-
-        return funcionarioRepository.findByMatricula(matricula).map(funcionario -> {
-            funcionario.setCargo(dto.getCargo());
-            funcionario.setSetor(dto.getSetor());
-            funcionario.setMatricula(dto.getMatricula());
-            funcionario.setObservacoes(dto.getObservacoes());
-
-            // Atualiza o usuário vinculado
-            Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-            funcionario.setUsuario(usuario);
-
-            Funcionario atualizado = funcionarioRepository.save(funcionario);
-            return FuncionarioMapper.toResponseDTO(atualizado);
-        });
-    }
-
-    public boolean deletar(String matricula) {
+    
+    @Transactional
+    public FuncionarioResponse atualizar(String matricula, FuncionarioRequest dto) {
+        verificarFuncionario.validarMatriculaNaoVazia(matricula);
+        verificarFuncionario.validarIdUsuarioNaoNulo(dto.getIdUsuario());
         
-        return funcionarioRepository.findByMatricula(matricula).map(funcionario -> {
-            funcionarioRepository.delete(funcionario);
-            return true;
-        }).orElse(false);
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
+        
+        // Verifica se a nova matrícula já existe (se for diferente da atual)
+        verificarFuncionario.verificarMatriculaDuplicadaAtualizacao(
+            matricula,
+            dto.getMatricula(),
+            funcionario.getIdFuncionario()
+        );
+        
+        funcionario.setCargo(dto.getCargo());
+        funcionario.setSetor(dto.getSetor());
+        funcionario.setMatricula(dto.getMatricula());
+        funcionario.setObservacoes(dto.getObservacoes());
+        
+        // Atualiza o usuário vinculado
+        Usuario usuario = verificarFuncionario.buscarUsuarioPorIdAtualizacao(
+            dto.getIdUsuario(),
+            funcionario.getIdFuncionario()
+        );
+        funcionario.setUsuario(usuario);
+        
+        Funcionario atualizado = funcionarioRepository.save(funcionario);
+        
+        // Registro de log (Atualização)
+        systemLogService.registrarAtualizacao(
+            atualizado.getIdFuncionario(),
+            "Funcionario",
+            "Dados do funcionário com matrícula " + matricula + " foram atualizados"
+        );
+        
+        return FuncionarioMapper.toResponseDTO(atualizado);
     }
-
+    
+    @Transactional
+    public void deletar(String matricula) {
+        verificarFuncionario.validarMatriculaNaoVazia(matricula);
+        
+        Funcionario funcionario = verificarFuncionario.buscarFuncionarioPorMatricula(matricula);
+        Integer idFuncionario = funcionario.getIdFuncionario();
+        
+        funcionarioRepository.delete(funcionario);
+        
+        // Registro de log (Exclusão)
+        systemLogService.registrarExclusao(
+            idFuncionario,
+            "Funcionario",
+            "Funcionário com matrícula " + matricula + " foi deletado"
+        );
+    }
+    
+    // ================= MÉTODOS AUXILIARES ================= //
+    
+    private Integer gerarIdUnicoFuncionario(Integer idUsuario) {
+        int tentativas = 0;
+        int maxTentativas = 1000;
+        
+        verificarFuncionario.validarIdUsuarioParaGeracao(idUsuario);
+        
+        String idUsuarioStr = String.valueOf(idUsuario);
+        String prefixo = idUsuarioStr.substring(0, 3);
+        
+        while (tentativas < maxTentativas) {
+            String numeroAleatorio = String.format("%03d", new Random().nextInt(1_000));
+            Integer idFuncionario = Integer.parseInt(prefixo + numeroAleatorio);
+            
+            if (!verificarFuncionario.idFuncionarioExiste(idFuncionario)) {
+                return idFuncionario;
+            }
+            tentativas++;
+        }
+        
+        // Se chegou aqui, não conseguiu gerar ID único após todas as tentativas
+        throw new BusinessException(
+            100,
+            "Funcionario",
+            "Não foi possível gerar um ID único para o funcionário após %d tentativas. Tente novamente.",
+            maxTentativas
+        );
+    }
 }

@@ -1,7 +1,7 @@
 package com.avicia.api.data.mapper;
 
-import com.avicia.api.data.dto.request.ProfissionalSaudeRequest;
-import com.avicia.api.data.dto.response.ProfissionalSaudeResponse;
+import com.avicia.api.data.dto.request.profissional.ProfissionalSaudeRequest;
+import com.avicia.api.data.dto.response.profissional.ProfissionalSaudeResponse;
 import com.avicia.api.model.ProfissionalSaude;
 
 public class ProfissionalSaudeMapper {

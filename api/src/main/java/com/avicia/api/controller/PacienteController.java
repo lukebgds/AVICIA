@@ -2,7 +2,6 @@ package com.avicia.api.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.avicia.api.data.dto.request.PacienteRequest;
-import com.avicia.api.data.dto.response.PacienteResponse;
+import com.avicia.api.data.dto.request.paciente.PacienteRequest;
+import com.avicia.api.data.dto.response.paciente.PacienteResponse;
 import com.avicia.api.service.PacienteService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PacienteController {
 
-    @Autowired
     private final PacienteService pacienteService;
 
     @GetMapping
@@ -34,28 +32,22 @@ public class PacienteController {
 
     @GetMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
     public ResponseEntity<PacienteResponse> buscarPorCpf(@PathVariable String cpf) {
-        return pacienteService.buscarPorCpf(cpf)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(pacienteService.buscarPorCpf(cpf));
     }
 
-    @PostMapping("/cadastro") // localhost:9081/api/pacientes
+    @PostMapping("/cadastro") // localhost:9081/api/pacientes/cadastro
     public PacienteResponse criar(@RequestBody PacienteRequest dto) {
         return pacienteService.criar(dto);
     }
 
     @PutMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
-    public ResponseEntity<PacienteResponse> atualizar(@PathVariable String cpf, @RequestBody PacienteRequest dto) {
-        
-        return pacienteService.atualizar(cpf, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PacienteResponse> atualizar(@PathVariable String cpf, @RequestBody PacienteRequest dto) { 
+        return ResponseEntity.ok(pacienteService.atualizar(cpf, dto));
     }
 
     @DeleteMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}
     public ResponseEntity<Void> deletar(@PathVariable String cpf) {
-        return pacienteService.deletar(cpf)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        pacienteService.deletar(cpf);
+        return ResponseEntity.noContent().build();
     }
 }
