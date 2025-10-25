@@ -1,0 +1,87 @@
+# Java / Spring Boot
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+target/
+hs_err_pid*
+replay_pid*
+logs
+.mtj.tmp/
+*.ctxt
+
+# Node / React
+node_modules/
+build/
+dist/
+.npm
+.nyc_output
+.nyc_output/
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
+.vuepress/dist
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.firebase/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependencies & packages
+bower_components
+jspm_packages/
+.lock-wscript
+build/Release
+lib-cov
+
+# TypeScript & lint caches
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.node_repl_history
+
+# Yarn
+*.tgz
+.yarn-integrity
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.vscode-test
+.vscode
+
+# Vite logs
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
