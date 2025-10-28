@@ -11,7 +11,8 @@ import PatientHome from "./pages/PacienteHome";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
-
+import AdminDashboardMain from "./pages/AdminDashboard/AdminDashboardMain";
+// No topo do arquivo, ajuste a importação:
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,9 +28,9 @@ const App = () => (
           <Route path="/paciente/home" element={<PatientHome />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<AdminLogin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+          <Route path="/admin/dashboard" element={<AdminDashboardMain />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
