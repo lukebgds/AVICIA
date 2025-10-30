@@ -40,4 +40,8 @@ src/main/resources/database/
 
 src/main/resources/keys
 
+### .ENV ###
+
+.env
+
 
