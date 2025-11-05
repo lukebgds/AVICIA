@@ -19,6 +19,7 @@ public class AuthController {
     private final TwoFactorService twoFactorService;
     private final EmailService emailService;
 
+    @PostMapping("/enviar")
     public ResponseEntity<?> enviarCodigo(@RequestBody TwoFactorRequest dto) {
         String codigo = twoFactorService.gerarCodigo(dto.getEmail());
         String corpo = String.format("""
