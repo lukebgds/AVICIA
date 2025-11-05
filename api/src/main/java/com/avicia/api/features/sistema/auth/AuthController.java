@@ -12,7 +12,7 @@ import com.avicia.api.features.sistema.auth.request.TwoFactorValidationRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/sistema/auth/2fa")
+@RequestMapping("api/sistema/auth/2fa")
 @RequiredArgsConstructor
 public class AuthController {
 
