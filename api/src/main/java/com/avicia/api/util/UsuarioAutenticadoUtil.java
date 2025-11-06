@@ -24,10 +24,22 @@ public class UsuarioAutenticadoUtil {
     private final ProfissionalSaudeRepository profissionalSaudeRepository;
     private final SystemError systemError;
 
+    private Integer extractIdUsuario(Jwt jwt) {
+        Object claim = jwt.getClaim("idUsuario");
+        if (claim instanceof Integer i) {
+            return i;
+        } else if (claim instanceof Long l) {
+            return l.intValue();
+        } else {
+            systemError.error("Tipo inesperado para idUsuario: " + (claim != null ? claim.getClass() : "null"));
+            throw new IllegalStateException("Tipo inesperado para idUsuario: " + (claim != null ? claim.getClass() : "null"));
+        }
+    }
+
     public Integer getIdUsuario() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return (Integer)jwt.getClaim("idUsuario");
+            return extractIdUsuario(jwt);
         }
         systemError.error("ID do usuário não encontrado no token");
         throw new IllegalStateException("ID do usuário não encontrado no token");
@@ -44,8 +56,8 @@ public class UsuarioAutenticadoUtil {
 
     public Integer getIdPaciente() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getPrincipal() instanceof Jwt jwt) {  
-            Integer idUsuarioToken = (Integer)jwt.getClaim("idUsuario");
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            Integer idUsuarioToken = extractIdUsuario(jwt);
             Integer idPaciente = pacienteRepository.findByUsuario_IdUsuario(idUsuarioToken)
                 .map(Paciente::getIdPaciente)
                 .orElse(null);
@@ -63,7 +75,7 @@ public class UsuarioAutenticadoUtil {
     public Integer getIdFuncionario() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            Integer idUsuarioToken = (Integer)jwt.getClaim("idUsuario");
+            Integer idUsuarioToken = extractIdUsuario(jwt);
             Integer idFuncionario = funcionarioRepository.findByUsuario_IdUsuario(idUsuarioToken)
                 .map(Funcionario::getIdFuncionario)
                 .orElse(null);
@@ -81,7 +93,7 @@ public class UsuarioAutenticadoUtil {
     public Integer getIdProfissionalSaude() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            Integer idUsuarioToken = (Integer)jwt.getClaim("idUsuario");
+            Integer idUsuarioToken = extractIdUsuario(jwt);
             Integer idProfissional = profissionalSaudeRepository.findByUsuario_IdUsuario(idUsuarioToken)
                 .map(ProfissionalSaude::getIdProfissional)
                 .orElse(null);

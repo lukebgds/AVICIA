@@ -1,6 +1,7 @@
 package com.avicia.api.features.associacao.paciente.profissional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class PacienteProfissionalSaudeService {
     private final ProfissionalSaudeRepository profissionalSaudeRepository;
     private final VerificarPacienteProfissionalSaude verificar;
     private final SystemLogService systemLogService;
+    private final PacienteProfissionalSaudeMapper mapper;
 
     /**
      * Cria um novo vínculo paciente-profissional
@@ -67,5 +69,14 @@ public class PacienteProfissionalSaudeService {
             String.format("Vínculo do profissional %d com o paciente %d foi removido", idProfissionalSaude, idPaciente)
         );
     }
+
+    /**
+     * Lista todos os vínculos existentes
+     */
+    @Transactional(readOnly = true)
+    public List<PacienteProfissionalSaudeResponse> listarTodosVinculos() {
+        return mapper.toDTOList(vinculoRepository.findAll());
+    }
+
 
 }

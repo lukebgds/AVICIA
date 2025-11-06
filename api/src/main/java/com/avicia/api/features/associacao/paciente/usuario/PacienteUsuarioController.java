@@ -1,6 +1,7 @@
 package com.avicia.api.features.associacao.paciente.usuario;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,12 +18,14 @@ public class PacienteUsuarioController {
     private final PacienteUsuarioService service;
 
     @PostMapping("/{idUsuario}/{idPaciente}")
+    @PreAuthorize("hasAuthority('ASSOCIACAO_CREATE')")
     public ResponseEntity<Void> criar(@PathVariable Integer idUsuario, @PathVariable Integer idPaciente) {
         service.criarVinculo(idUsuario, idPaciente);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{idUsuario}/{idPaciente}")
+    @PreAuthorize("hasAuthority('ASSOCIACAO_DELETE')")
     public ResponseEntity<Void> deletar(@PathVariable Integer idUsuario, @PathVariable Integer idPaciente) {
         service.deletarVinculo(idUsuario, idPaciente);
         return ResponseEntity.noContent().build();

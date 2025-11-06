@@ -31,7 +31,7 @@ public class TokenService {
                 .subject(identity)
                 .expiresAt(generateExpirationDate())
                 .issuedAt(Instant.now())
-                .claim("idUsuario", idUsuario)
+                .claim("idUsuario", idUsuario.intValue())
                 .claim("role", role.getNome())
                 .claim("permissoes", role.getPermissoes())
                 .build();
