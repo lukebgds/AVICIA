@@ -22,18 +22,14 @@ public class PacienteProfissionalSaudeController {
 
     @PostMapping("/{idProfissionalSaude}/{idPaciente}")
     @PreAuthorize("hasAuthority('ASSOCIACAO_CREATE')")
-    public ResponseEntity<Void> criarVinculo(
-            @PathVariable Integer idProfissionalSaude,
-            @PathVariable Integer idPaciente) {
+    public ResponseEntity<Void> criarVinculo(@PathVariable Integer idProfissionalSaude, @PathVariable Integer idPaciente) {
         vinculoService.criarVinculo(idProfissionalSaude, idPaciente);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{idProfissionalSaude}/{idPaciente}")
     @PreAuthorize("hasAuthority('ASSOCIACAO_DELETE')")
-    public ResponseEntity<Void> deletarVinculo(
-            @PathVariable Integer idProfissionalSaude,
-            @PathVariable Integer idPaciente) {
+    public ResponseEntity<Void> deletarVinculo(@PathVariable Integer idProfissionalSaude, @PathVariable Integer idPaciente) {
         vinculoService.deletarVinculo(idProfissionalSaude, idPaciente);
         return ResponseEntity.noContent().build();
     }

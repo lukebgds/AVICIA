@@ -33,9 +33,8 @@ public class VerificarAcessoPaciente {
      * Verifica se um profissional de saúde tem acesso ao paciente
      */
     public void verificarAcessoProfissional(Integer idProfissional, Integer idPaciente) {
-        boolean vinculoExiste = pacienteProfissionalSaudeRepository.existsById(
-            new PacienteProfissionalSaudeId(idProfissional, idPaciente)
-        );
+        boolean vinculoExiste = pacienteProfissionalSaudeRepository.existsVinculo(idProfissional, idPaciente);
+
 
         if (!vinculoExiste) {
             systemError.error(idProfissional, "Paciente",

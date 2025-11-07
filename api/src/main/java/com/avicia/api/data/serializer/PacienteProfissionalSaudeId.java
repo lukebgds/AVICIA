@@ -12,6 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PacienteProfissionalSaudeId {
-    private Integer idPaciente;
     private Integer idProfissional;
+    private Integer idPaciente;
 }

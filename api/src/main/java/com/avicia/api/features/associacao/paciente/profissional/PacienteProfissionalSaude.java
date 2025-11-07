@@ -26,7 +26,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PacienteProfissionalSaude {
 
-    @Id
     @EmbeddedId
     private PacienteProfissionalSaudeId id;
 

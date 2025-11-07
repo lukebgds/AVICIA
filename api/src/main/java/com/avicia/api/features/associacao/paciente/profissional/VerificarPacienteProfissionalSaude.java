@@ -35,7 +35,7 @@ public class VerificarPacienteProfissionalSaude {
      * Verifica se o vínculo já existe
      */
     public void verificarDuplicidade(Integer idProfissionalSaude, Integer idPaciente) {
-        if (vinculoRepository.existsById_IdProfissionalAndId_IdPaciente(idProfissionalSaude, idPaciente)) {
+        if (vinculoRepository.existsVinculo(idProfissionalSaude, idPaciente)) {
             systemError.error(idProfissionalSaude, "PacienteProfissionalSaude",
                 "O profissional já possui vínculo com o paciente informado");
         }
@@ -45,7 +45,7 @@ public class VerificarPacienteProfissionalSaude {
      * Verifica se o vínculo existe antes de deletar
      */
     public void verificarVinculoExiste(Integer idProfissionalSaude, Integer idPaciente) {
-        if (!vinculoRepository.existsById_IdProfissionalAndId_IdPaciente(idProfissionalSaude, idPaciente)) {
+        if (!vinculoRepository.existsVinculo(idProfissionalSaude, idPaciente)) {
             systemError.error(idProfissionalSaude, "PacienteProfissionalSaude",
                 "Vínculo entre profissional e paciente não encontrado");
         }
