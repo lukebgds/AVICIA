@@ -1,6 +1,7 @@
 package com.avicia.api.features.associacao.paciente.usuario;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,11 @@ public class PacienteUsuarioService {
             "PacienteUsuario",
             String.format("Vínculo do usuário %d com o paciente %d foi removido", idUsuario, idPaciente)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PacienteUsuario> listarTodosVinculos() {
+        return vinculoRepository.findAll();
     }
 
 }

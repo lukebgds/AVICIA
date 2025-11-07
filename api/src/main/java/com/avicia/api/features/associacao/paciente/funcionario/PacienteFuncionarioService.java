@@ -1,6 +1,7 @@
 package com.avicia.api.features.associacao.paciente.funcionario;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,11 @@ public class PacienteFuncionarioService {
             "PacienteFuncionario",
             String.format("Vínculo do funcionário %d com o paciente %d foi removido", idFuncionario, idPaciente)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PacienteFuncionario> listarTodosVinculos() {
+        return vinculoRepository.findAll();
     }
 
 }
