@@ -1,5 +1,7 @@
 package com.avicia.api.features.associacao.paciente;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.avicia.api.data.serializer.PacienteFuncionarioId;
@@ -125,6 +127,49 @@ public class VerificarAcessoPaciente {
         
         verificarAcessoGeral(idGenerico, idPaciente, roleNome, primeiroDigito);
 
+    }
+
+
+    /**
+     * Pega as informações do usuário pelo token de sessão e tras ums lista de todos os pacientes associados a ele
+     */
+    public List<Integer> listarIdsPacientesAssociados() {
+        
+        // Buscar role pelo nome vindo do JWT
+        String roleNome = usuarioAutenticadoUtil.getRoleUsuario();
+
+        Role role = roleRepository.findByNome(roleNome)
+            .orElseThrow(() -> new IllegalArgumentException("Role não encontrada: " + roleNome));
+
+        int primeiroDigito = Integer.parseInt(String.valueOf(role.getIdRole()).substring(0, 1));
+
+        Integer idGenerico = switch (primeiroDigito) {
+            case 3 -> usuarioAutenticadoUtil.getIdProfissionalSaude();
+            case 5 -> usuarioAutenticadoUtil.getIdFuncionario();
+            case 1 -> usuarioAutenticadoUtil.getIdUsuario();
+            default -> null;
+        };
+
+        if (idGenerico == null) {
+            throw new IllegalStateException("Usuário não possui tipo de identificação válido para vínculo com pacientes.");
+        }
+
+        // Retorna os IDs de pacientes vinculados de acordo com o tipo de usuário
+        return switch (primeiroDigito) {
+            case 3 -> pacienteProfissionalSaudeRepository.findAllByProfissionalId(idGenerico)
+                        .stream()
+                        .map(v -> v.getId().getIdPaciente())
+                        .toList();
+            case 5 -> pacienteFuncionarioRepository.findAllByFuncionarioId(idGenerico)
+                        .stream()
+                        .map(v -> v.getId().getIdPaciente())
+                        .toList();
+            case 1 -> pacienteUsuarioRepository.findAllByUsuarioId(idGenerico)
+                        .stream()
+                        .map(v -> v.getId().getIdPaciente())
+                        .toList();
+            default -> List.of();
+        };
     }
 
 }

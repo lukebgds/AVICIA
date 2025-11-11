@@ -1,5 +1,7 @@
 package com.avicia.api.features.associacao.paciente.profissional;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,5 +19,11 @@ public interface PacienteProfissionalSaudeRepository extends JpaRepository<Pacie
           AND p.id.idPaciente = :idPaciente
         """)
     boolean existsVinculo(@Param("idProfissional") Integer idProfissional, @Param("idPaciente") Integer idPaciente);
+
+    @Query("""
+        SELECT p FROM PacienteProfissionalSaude p
+        WHERE p.profissionalSaude.idProfissional = :idProfissional
+    """)
+    List<PacienteProfissionalSaude> findAllByProfissionalId(Integer idProfissional);
 
 }

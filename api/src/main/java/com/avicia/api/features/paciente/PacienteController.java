@@ -30,8 +30,8 @@ public class PacienteController {
     @GetMapping
     @PreAuthorize("hasAuthority('PACIENTE_READ')")
     public List<PacienteResponse> listarTodos() {
-        //verificarAcessoPaciente.verificarAcesso(); // TALVEZ ISSO PRECISE DE UM MÉTODO DIFERENTE
-        return pacienteService.listarTodos();
+        List<Integer> idsPacienteAssociados = verificarAcessoPaciente.listarIdsPacientesAssociados();
+        return pacienteService.listaPorIds(idsPacienteAssociados);
     }
 
     @GetMapping("/{cpf}") // localhost:9081/api/pacientes/{cpf}

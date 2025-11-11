@@ -33,6 +33,15 @@ public class PacienteService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public List<PacienteResponse> listaPorIds(List<Integer> ids) {
+        if (ids.isEmpty()) { return List.of(); }
+        return pacienteRepository.findAllById(ids)
+            .stream()
+            .map(PacienteMapper::toResponseDTO)
+            .toList();
+    }
+
     @Transactional(readOnly = true)
     public PacienteResponse buscarPorId(Integer id) {
         Paciente paciente = verificarPaciente.buscarPacientePorId(id);
@@ -107,7 +116,6 @@ public class PacienteService {
         verificarPaciente.validarCpfNaoVazio(cpf);
         
         Paciente existing = verificarPaciente.buscarPacientePorCpf(cpf);
-        Integer idPaciente = existing.getIdPaciente();
         
         pacienteRepository.delete(existing);
         
@@ -118,6 +126,8 @@ public class PacienteService {
             "Paciente com CPF " + cpf + " foi deletado"
         );
     }
+
+
     
     // ================= MÉTODOS AUXILIARES ================= //
     
