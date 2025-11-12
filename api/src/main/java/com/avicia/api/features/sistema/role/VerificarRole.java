@@ -16,9 +16,9 @@ public class VerificarRole {
     private final UsuarioAutenticadoUtil usuarioAutenticadoUtil;
 
     public void validarNomeNaoVazio(String nome) {
-        Integer id = getIdUsuarioToken();
+        // Integer id = getIdUsuarioToken(); -- Solução provisória
         if (nome == null || nome.trim().isEmpty()) {
-            systemError.error(id, "Role", "Nome da role não pode ser vazio");
+            systemError.error(100, "Role", "Nome da role não pode ser vazio");
         }
     }
 
