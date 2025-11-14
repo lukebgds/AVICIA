@@ -54,6 +54,8 @@ public class SecurityConfiguration {
                                                             // Email
                                                             .requestMatchers(HttpMethod.POST, "/api/sistema/auth/2fa/enviar").permitAll()
                                                             .requestMatchers(HttpMethod.POST, "/api/sistema/auth/2fa/validar").permitAll()
+                                                            // Recuperação de senha
+                                                            .requestMatchers(HttpMethod.PUT, "/api/usuarios/recuperar-senha").permitAll()
 
                                                             .anyRequest().authenticated()
             )

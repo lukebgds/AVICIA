@@ -14,6 +14,7 @@ import com.avicia.api.features.sistema.systemLog.SystemLogService;
 import com.avicia.api.features.usuario.request.UsuarioRequest;
 import com.avicia.api.features.usuario.response.CriarUsuarioResponse;
 import com.avicia.api.features.usuario.response.UsuarioResponse;
+import com.avicia.api.util.UsuarioAutenticadoUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,7 @@ public class UsuarioService {
     private final Argon2PasswordEncoder passwordEncoder;
     private final SystemLogService systemLogService;
     private final VerificarUsuario verificarUsuario;
+    private final UsuarioAutenticadoUtil usuarioAutenticadoUtil;
 
     @Transactional
     public CriarUsuarioResponse criar(UsuarioRequest dto) {
@@ -105,17 +107,39 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse atualizarSenha(String cpf, String senhaAtual, String senhaNova) {
+    public UsuarioResponse atualizarSenha(String senhaAtual, String senhaNova) {
         
-        verificarUsuario.validarCpfNaoVazio(cpf);
         verificarUsuario.validarSenha(senhaAtual);
         verificarUsuario.validarSenha(senhaNova);
         verificarUsuario.validarSenhaDiferente(senhaAtual, senhaNova);
         
-        Usuario usuario = verificarUsuario.buscarUsuarioPorCpf(cpf);
+        Usuario usuario = verificarUsuario.buscarUsuarioPorId(usuarioAutenticadoUtil.getIdUsuario());
         
         // Verifica se a senha atual está correta
         verificarUsuario.verificarSenhaAtual(senhaAtual, usuario.getSenhaHash(), usuario.getIdUsuario());
+
+        // Criptografa a senha nova
+        usuario.setSenhaHash(passwordEncoder.encode(senhaNova));
+
+        Usuario atualizado = usuarioRepository.save(usuario);
+
+        // Registro de log (Atualização de senha)
+        systemLogService.registrarAtualizacao(
+            atualizado.getIdUsuario(),
+            "Usuario",
+            "Senha alterada com sucesso"
+        );
+
+        return UsuarioMapper.toResponseDTO(atualizado);
+    }
+
+    @Transactional
+    public UsuarioResponse recuperarSenha(String cpf, String senhaNova) {
+        
+        verificarUsuario.validarCpfNaoVazio(cpf);
+        verificarUsuario.validarSenha(senhaNova);
+        
+        Usuario usuario = verificarUsuario.buscarUsuarioPorCpf(cpf);
 
         // Criptografa a senha nova
         usuario.setSenhaHash(passwordEncoder.encode(senhaNova));

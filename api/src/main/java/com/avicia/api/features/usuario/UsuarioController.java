@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avicia.api.features.usuario.request.AlterarSenhaRequest;
+import com.avicia.api.features.usuario.request.RecuperarSenhaRequest;
 import com.avicia.api.features.usuario.request.UsuarioRequest;
 import com.avicia.api.features.usuario.response.CriarUsuarioResponse;
 import com.avicia.api.features.usuario.response.UsuarioResponse;
@@ -53,10 +54,17 @@ public class UsuarioController {
     }
 
     // localhost:9081/api/usuarios/{cpf}/senha
-    @PutMapping("/{cpf}/alterar-senha")
+    @PutMapping("/alterar-senha")
     @PreAuthorize("hasAuthority('USUARIO_UPDATE')")
-    public ResponseEntity<UsuarioResponse> atualizarSenha(@PathVariable String cpf, @RequestBody AlterarSenhaRequest request) {
-        UsuarioResponse usuario = usuarioService.atualizarSenha(cpf, request.senhaAtual(), request.senhaNova());
+    public ResponseEntity<UsuarioResponse> atualizarSenha(@RequestBody AlterarSenhaRequest request) {
+        UsuarioResponse usuario = usuarioService.atualizarSenha(request.senhaAtual(), request.senhaNova());
+        return ResponseEntity.ok(usuario);
+    }
+
+    @PutMapping("/recuperar-senha")
+    @PreAuthorize("hasAuthority('USUARIO_UPDATE')")
+    public ResponseEntity<UsuarioResponse> recuperarSenha(@RequestBody RecuperarSenhaRequest request) {
+        UsuarioResponse usuario = usuarioService.recuperarSenha(request.getCpf(), request.getSenhaNova());
         return ResponseEntity.ok(usuario);
     }
 
