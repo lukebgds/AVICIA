@@ -62,7 +62,6 @@ public class UsuarioController {
     }
 
     @PutMapping("/recuperar-senha")
-    @PreAuthorize("hasAuthority('USUARIO_UPDATE')")
     public ResponseEntity<UsuarioResponse> recuperarSenha(@RequestBody RecuperarSenhaRequest request) {
         UsuarioResponse usuario = usuarioService.recuperarSenha(request.getCpf(), request.getSenhaNova());
         return ResponseEntity.ok(usuario);

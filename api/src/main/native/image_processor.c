@@ -9,7 +9,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-// Kernel OpenCL
+// Kernel OpenCL para processamento de imagens 
 const char *kernelSource = 
 "__kernel void processImage(\n"
 "    __global const uchar4* input,\n"
@@ -156,3 +156,173 @@ typedef struct {
 
 // Contexto global
 static OpenCLContext g_context = {0};
+
+// Função para inicializar OpenCL
+int opencl_init() {
+    if (g_context.initialized) {
+        return 1;
+    }
+
+    cl_int ret;
+    
+    // 1. Obter plataforma
+    ret = clGetPlatformIDs(1, &g_context.platform, NULL);
+    if (ret != CL_SUCCESS) {
+        fprintf(stderr, "Erro ao obter plataforma OpenCL: %d\n", ret);
+        return 0;
+    }
+
+    // 2. Obter dispositivo GPU
+    ret = clGetDeviceIDs(g_context.platform, CL_DEVICE_TYPE_GPU, 1, 
+                         &g_context.device, NULL);
+    if (ret != CL_SUCCESS) {
+        // Tentar CPU como fallback
+        ret = clGetDeviceIDs(g_context.platform, CL_DEVICE_TYPE_CPU, 1, 
+                            &g_context.device, NULL);
+        if (ret != CL_SUCCESS) {
+            fprintf(stderr, "Erro ao obter dispositivo OpenCL: %d\n", ret);
+            return 0;
+        }
+        printf("Usando CPU para OpenCL\n");
+    } else {
+        printf("Usando GPU para OpenCL\n");
+    }
+
+    // 3. Criar contexto
+    g_context.context = clCreateContext(NULL, 1, &g_context.device, 
+                                        NULL, NULL, &ret);
+    if (ret != CL_SUCCESS) {
+        fprintf(stderr, "Erro ao criar contexto: %d\n", ret);
+        return 0;
+    }
+
+    // 4. Criar fila de comandos
+    g_context.queue = clCreateCommandQueue(g_context.context, 
+                                           g_context.device, 0, &ret);
+    if (ret != CL_SUCCESS) {
+        fprintf(stderr, "Erro ao criar fila de comandos: %d\n", ret);
+        return 0;
+    }
+
+    // 5. Compilar programa
+    size_t source_size = strlen(kernelSource);
+    g_context.program = clCreateProgramWithSource(g_context.context, 1, 
+                                                   &kernelSource, &source_size, &ret);
+    if (ret != CL_SUCCESS) {
+        fprintf(stderr, "Erro ao criar programa: %d\n", ret);
+        return 0;
+    }
+
+    ret = clBuildProgram(g_context.program, 1, &g_context.device, 
+                        NULL, NULL, NULL);
+    if (ret != CL_SUCCESS) {
+        // Obter log de compilação
+        size_t log_size;
+        clGetProgramBuildInfo(g_context.program, g_context.device, 
+                             CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        char *log = (char*)malloc(log_size);
+        clGetProgramBuildInfo(g_context.program, g_context.device, 
+                             CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+        fprintf(stderr, "Erro ao compilar programa:\n%s\n", log);
+        free(log);
+        return 0;
+    }
+
+    g_context.initialized = 1;
+    printf("OpenCL inicializado com sucesso!\n");
+    return 1;
+}
+
+
+// Função para processar imagem
+int process_image(const char* input_path, const char* output_path,
+                 float contrast, float brightness, ProcessResult* result) {
+    
+    if (!g_context.initialized) {
+        if (!opencl_init()) {
+            strcpy(result->message, "Erro ao inicializar OpenCL");
+            result->success = 0;
+            return 0;
+        }
+    }
+
+    // Carregar imagem
+    int width, height, channels;
+    unsigned char *image = stbi_load(input_path, &width, &height, &channels, 4);
+    if (!image) {
+        sprintf(result->message, "Erro ao carregar imagem: %s", input_path);
+        result->success = 0;
+        return 0;
+    }
+
+    printf("Imagem carregada: %dx%d, %d canais\n", width, height, channels);
+
+    size_t image_size = width * height * 4 * sizeof(unsigned char);
+    unsigned char *output = (unsigned char*)malloc(image_size);
+
+    cl_int ret;
+    
+    // Criar buffers OpenCL
+    cl_mem input_buffer = clCreateBuffer(g_context.context, 
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        image_size, image, &ret);
+    
+    cl_mem output_buffer = clCreateBuffer(g_context.context, 
+        CL_MEM_WRITE_ONLY, image_size, NULL, &ret);
+
+    // Criar e configurar kernel
+    cl_kernel kernel = clCreateKernel(g_context.program, "processImage", &ret);
+    if (ret != CL_SUCCESS) {
+        sprintf(result->message, "Erro ao criar kernel: %d", ret);
+        result->success = 0;
+        goto cleanup;
+    }
+
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
+    clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_buffer);
+    clSetKernelArg(kernel, 2, sizeof(int), &width);
+    clSetKernelArg(kernel, 3, sizeof(int), &height);
+    clSetKernelArg(kernel, 4, sizeof(float), &contrast);
+    clSetKernelArg(kernel, 5, sizeof(float), &brightness);
+
+    // Executar kernel
+    size_t global_work_size[2] = {(size_t)width, (size_t)height};
+    ret = clEnqueueNDRangeKernel(g_context.queue, kernel, 2, NULL,
+                                 global_work_size, NULL, 0, NULL, NULL);
+    if (ret != CL_SUCCESS) {
+        sprintf(result->message, "Erro ao executar kernel: %d", ret);
+        result->success = 0;
+        goto cleanup;
+    }
+
+    // Ler resultado
+    ret = clEnqueueReadBuffer(g_context.queue, output_buffer, CL_TRUE, 0,
+                             image_size, output, 0, NULL, NULL);
+    if (ret != CL_SUCCESS) {
+        sprintf(result->message, "Erro ao ler buffer: %d", ret);
+        result->success = 0;
+        goto cleanup;
+    }
+
+    // Salvar imagem
+    if (!stbi_write_png(output_path, width, height, 4, output, width * 4)) {
+        sprintf(result->message, "Erro ao salvar imagem: %s", output_path);
+        result->success = 0;
+        goto cleanup;
+    }
+
+    sprintf(result->message, "Imagem processada com sucesso");
+    result->success = 1;
+    result->width = width;
+    result->height = height;
+    result->channels = channels;
+
+cleanup:
+    clReleaseMemObject(input_buffer);
+    clReleaseMemObject(output_buffer);
+    clReleaseKernel(kernel);
+    free(output);
+    stbi_image_free(image);
+
+    return result->success;
+}
