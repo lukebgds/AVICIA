@@ -5,9 +5,9 @@
 
 #define MAX_SOURCE_SIZE (0x100000)
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 // Kernel OpenCL para processamento de imagens 
 const char *kernelSource = 
@@ -76,10 +76,11 @@ const char *kernelSource =
 "    }\n"
 "    \n"
 "    uchar4 result;\n"
-"    result.x = (uchar)(sum.x / count);\n"
-"    result.y = (uchar)(sum.y / count);\n"
-"    result.z = (uchar)(sum.z / count);\n"
-"    result.w = (uchar)(sum.w / count);\n"
+"    int c = (count > 0 ? count : 1;\n"
+"    result.x = (uchar)(sum.x / c);\n"
+"    result.y = (uchar)(sum.y / c);\n"
+"    result.z = (uchar)(sum.z / c);\n"
+"    result.w = (uchar)(sum.w / c);\n"
 "    \n"
 "    output[y * width + x] = result;\n"
 "}\n"
@@ -87,51 +88,58 @@ const char *kernelSource =
 "__kernel void calculateStats(\n"
 "    __global const float* data,\n"
 "    __global float* results,\n"
-"    const int n)\n"
+"    const int n,\n"
+"    __local float* localMem)\n"
 "{\n"
 "    int gid = get_global_id(0);\n"
 "    int lid = get_local_id(0);\n"
 "    int groupSize = get_local_size(0);\n"
-"    \n"
-"    __local float localSum[256];\n"
-"    __local float localMax[256];\n"
-"    __local float localMin[256];\n"
-"    \n"
-"    if (gid < n) {\n"
-"        localSum[lid] = data[gid];\n"
-"        localMax[lid] = data[gid];\n"
-"        localMin[lid] = data[gid];\n"
-"    } else {\n"
-"        localSum[lid] = 0.0f;\n"
-"        localMax[lid] = -INFINITY;\n"
-"        localMin[lid] = INFINITY;\n"
-"    }\n"
-"    \n"
+"    float* localSum = localMem;\n"
+"    float* localMax = localMem + groupSize;\n"
+"    float* localMin = localMem + 2*groupSize;\n"
+"\n"
+"    float v = (gid < n) ? data[gid] : 0.0f;\n"
+"\n"
+"    localSum[lid] = (gid < n) ? v : 0.0f;\n"
+"    localMax[lid] = (gid < n) ? v : -INFINITY;\n"
+"    localMin[lid] = (gid < n) ? v : INFINITY;\n"
+"\n"
 "    barrier(CLK_LOCAL_MEM_FENCE);\n"
-"    \n"
-"    // Redução paralela\n"
+"\n"
 "    for (int stride = groupSize / 2; stride > 0; stride /= 2) {\n"
 "        if (lid < stride) {\n"
 "            localSum[lid] += localSum[lid + stride];\n"
-"            localMax[lid] = max(localMax[lid], localMax[lid + stride]);\n"
-"            localMin[lid] = min(localMin[lid], localMin[lid + stride]);\n"
+"            localMax[lid] = fmax(localMax[lid], localMax[lid + stride]);\n"
+"            localMin[lid] = fmin(localMin[lid], localMin[lid + stride]);\n"
 "        }\n"
 "        barrier(CLK_LOCAL_MEM_FENCE);\n"
 "    }\n"
-"    \n"
+"\n"
+"    int float_to_int(float x) { return as_int(x); }\n"
+"    float int_to_float(int x) { return as_float(x); }\n"
+"\n"
 "    if (lid == 0) {\n"
-"        atomic_add_global(&results[0], localSum[0]);\n"
-"        // Para max e min, usamos compare-and-swap\n"
-"        float oldMax = results[1];\n"
-"        while (localMax[0] > oldMax) {\n"
-"            float expected = oldMax;\n"
-"            oldMax = atom_cmpxchg(&results[1], as_int(expected), as_int(localMax[0]));\n"
-"        }\n"
-"        float oldMin = results[2];\n"
-"        while (localMin[0] < oldMin) {\n"
-"            float expected = oldMin;\n"
-"            oldMin = atom_cmpxchg(&results[2], as_int(expected), as_int(localMin[0]));\n"
-"        }\n"
+"        volatile __global int* sumPtr = (volatile __global int*)&results[0];\n"
+"        int oldInt, newInt;\n"
+"        float oldF, newF;\n" 
+"        do {\n"
+"            oldInt = *sumPtr;\n"
+"            oldF = int_to_float(oldInt);\n            newF = oldF + localSum[0];\n            newInt = float_to_int(newF);\n" 
+"        } while (atomic_cmpxchg(sumPtr, oldInt, newInt) != oldInt);\n"
+"\n"
+"        volatile __global int* maxPtr = (volatile __global int*)&results[1];\n"
+"        int prevMaxInt;\n"
+"        do {\n"
+"            prevMaxInt = *maxPtr;\n" 
+"            if (localMax[0] <= int_to_float(prevMaxInt)) break;\n" 
+"        } while (atomic_cmpxchg(maxPtr, prevMaxInt, float_to_int(localMax[0])) != prevMaxInt);\n"
+"\n"
+"        volatile __global int* minPtr = (volatile __global int*)&results[2];\n"
+"        int prevMinInt;\n"
+"        do {\n"
+"            prevMinInt = *minPtr;\n" 
+"            if (localMin[0] >= int_to_float(prevMinInt)) break;\n"
+"        } while (atomic_cmpxchg(minPtr, prevMinInt, float_to_int(localMin[0])) != prevMinInt);\n"
 "    }\n"
 "}\n";
 
@@ -325,4 +333,146 @@ cleanup:
     stbi_image_free(image);
 
     return result->success;
+}
+
+// Função para reduzir ruído
+int reduce_noise(const char* input_path, const char* output_path,
+                int kernel_size, ProcessResult* result) {
+    
+    if (!g_context.initialized) {
+        if (!opencl_init()) {
+            strcpy(result->message, "Erro ao inicializar OpenCL");
+            result->success = 0;
+            return 0;
+        }
+    }
+
+    int width, height, channels;
+    unsigned char *image = stbi_load(input_path, &width, &height, &channels, 4);
+    if (!image) {
+        sprintf(result->message, "Erro ao carregar imagem: %s", input_path);
+        result->success = 0;
+        return 0;
+    }
+
+    size_t image_size = width * height * 4 * sizeof(unsigned char);
+    unsigned char *output = (unsigned char*)malloc(image_size);
+
+    cl_int ret;
+    cl_mem input_buffer = clCreateBuffer(g_context.context, 
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        image_size, image, &ret);
+    
+    cl_mem output_buffer = clCreateBuffer(g_context.context, 
+        CL_MEM_WRITE_ONLY, image_size, NULL, &ret);
+
+    cl_kernel kernel = clCreateKernel(g_context.program, "reduceNoise", &ret);
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
+    clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_buffer);
+    clSetKernelArg(kernel, 2, sizeof(int), &width);
+    clSetKernelArg(kernel, 3, sizeof(int), &height);
+    clSetKernelArg(kernel, 4, sizeof(int), &kernel_size);
+
+    size_t global_work_size[2] = {(size_t)width, (size_t)height};
+    clEnqueueNDRangeKernel(g_context.queue, kernel, 2, NULL,
+                          global_work_size, NULL, 0, NULL, NULL);
+
+    clEnqueueReadBuffer(g_context.queue, output_buffer, CL_TRUE, 0,
+                       image_size, output, 0, NULL, NULL);
+
+    stbi_write_png(output_path, width, height, 4, output, width * 4);
+
+    sprintf(result->message, "Ruído reduzido com sucesso");
+    result->success = 1;
+    result->width = width;
+    result->height = height;
+
+    clReleaseMemObject(input_buffer);
+    clReleaseMemObject(output_buffer);
+    clReleaseKernel(kernel);
+    free(output);
+    stbi_image_free(image);
+
+    return 1;
+}
+
+// Função para calcular estatísticas
+int calculate_stats(float* data, int n, float* mean, float* max, float* min) {
+    if (!g_context.initialized) {
+        if (!opencl_init()) {
+            return 0;
+        }
+    }
+
+    float results[3] = {0.0f, -INFINITY, INFINITY};
+    
+    cl_int ret;
+    cl_mem data_buffer = clCreateBuffer(g_context.context,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        n * sizeof(float), data, &ret);
+    
+    cl_mem results_buffer = clCreateBuffer(g_context.context,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        3 * sizeof(float), results, &ret);
+
+    cl_kernel kernel = clCreateKernel(g_context.program, "calculateStats", &ret);
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), &data_buffer);
+    clSetKernelArg(kernel, 1, sizeof(cl_mem), &results_buffer);
+    clSetKernelArg(kernel, 2, sizeof(int), &n);
+
+    size_t global_work_size = ((n + 255) / 256) * 256;
+    size_t local_work_size = 256;
+    clSetKernelArg(kernel, 3, local_work_size * 3 * sizeof(float), NULL);
+    clEnqueueNDRangeKernel(g_context.queue, kernel, 1, NULL,
+                          &global_work_size, &local_work_size, 0, NULL, NULL);
+
+    clEnqueueReadBuffer(g_context.queue, results_buffer, CL_TRUE, 0,
+                       3 * sizeof(float), results, 0, NULL, NULL);
+
+    *mean = (n>0) ? results[0] / n : 0.0f;
+    *max = results[1];
+    *min = results[2];
+
+    clReleaseMemObject(data_buffer);
+    clReleaseMemObject(results_buffer);
+    clReleaseKernel(kernel);
+
+    return 1;
+}
+
+// Função para limpeza
+void opencl_cleanup() {
+    if (g_context.initialized) {
+        clReleaseProgram(g_context.program);
+        clReleaseCommandQueue(g_context.queue);
+        clReleaseContext(g_context.context);
+        g_context.initialized = 0;
+        printf("OpenCL finalizado\n");
+    }
+}
+
+// Função main para testes standalone
+int main(int argc, char** argv) {
+    if (argc < 4) {
+        printf("Uso: %s <input> <output> <contrast> [brightness]\n", argv[0]);
+        return 1;
+    }
+
+    const char* input = argv[1];
+    const char* output = argv[2];
+    float contrast = atof(argv[3]);
+    float brightness = (argc > 4) ? atof(argv[4]) : 0.0f;
+
+    ProcessResult result;
+    
+    if (process_image(input, output, contrast, brightness, &result)) {
+        printf("Sucesso: %s\n", result.message);
+        printf("Dimensões: %dx%d\n", result.width, result.height);
+    } else {
+        fprintf(stderr, "Erro: %s\n", result.message);
+        return 1;
+    }
+
+    opencl_cleanup();
+    return 0;
 }
