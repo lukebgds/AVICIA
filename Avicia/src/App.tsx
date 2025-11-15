@@ -4,15 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro";
-import Dashboard from "./pages/Dashboard";
-import PatientHome from "./pages/PacienteHome";
-import AdminLogin from "./pages/AdminLogin";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminDashboardMain from "./pages/AdminDashboard/AdminDashboardMain";
-// No topo do arquivo, ajuste a importação:
+import NotFoundPage from "./components/NotFoundPage";
+import Login from "@/pages/Login";
+import EsqueceuSenha from "@/pages/EsqueceuSenha";
+import VerificarCodigo from "@/pages/VerificarCodigo";
+import RecuperarSenha from "@/pages/RecuperarSenha";
+import Cadastro from "@/pages/Cadastro";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -22,15 +20,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Rotas principais */}
           <Route path="/" element={<Index />} />
+
+          {/* Rotas de Autenticação */}
           <Route path="/login" element={<Login />} />
+          <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
+          <Route path="/verificar-codigo" element={<VerificarCodigo />} />
+          <Route path="/nova-senha" element={<RecuperarSenha />} />
+          <Route path="*" element={<NotFoundPage />} />
           <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/paciente/home" element={<PatientHome />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="*" element={<NotFound />} />
-          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
-          <Route path="/admin/dashboard" element={<AdminDashboardMain />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

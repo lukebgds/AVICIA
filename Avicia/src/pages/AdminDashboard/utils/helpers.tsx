@@ -4,7 +4,6 @@ import {
   XCircle,
   AlertTriangle,
   Activity,
-  Clock,
 } from "lucide-react";
 import {
   initialPermissions,
@@ -125,7 +124,7 @@ export const buildUsuarioData = (formData: Partial<User>, idRole: string) => {
   return {
     nome: formData.name?.trim() || "",
     cpf: (formData.cpf || "").replace(/\D/g, ""),
-    dataNascimento: formData.birthDate || null,
+    dataNascimento: formData.birthDate,
     sexo: formData.gender
       ? formData.gender === "M"
         ? "MASCULINO"

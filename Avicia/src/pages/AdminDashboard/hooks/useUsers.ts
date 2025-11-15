@@ -151,10 +151,11 @@ export const useUsers = (token: string | null): UseUsersReturn => {
       delete dataToSave.password;
     }
     delete dataToSave.confirmPassword;
-    setLoading(true);
 
     if (!editingUser && ROLES.includes(formData.role as string)) {
       try {
+        setLoading(true);
+
         const roleName =
           formData.role === "Paciente"
             ? "PACIENTE"
@@ -193,14 +194,17 @@ export const useUsers = (token: string | null): UseUsersReturn => {
             "Falha ao criar usuário. Verifique os dados e tente novamente.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
     } else {
+      setLoading(true);
       toast({
         title: "Funcionalidade em Desenvolvimento",
         description: "Edição de usuários será implementada em breve.",
       });
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
