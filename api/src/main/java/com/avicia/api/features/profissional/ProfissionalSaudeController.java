@@ -41,7 +41,7 @@ public class ProfissionalSaudeController {
         return ResponseEntity.ok(profissionalService.listarTodos());
     }
     
-    @GetMapping("/logado/id")
+    @GetMapping("/logado")
     @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<ProfissionalSaudeResponse> buscarIdProfissionalLogado() {
         return ResponseEntity.ok(profissionalService.buscarIdProfissionalLogado());
