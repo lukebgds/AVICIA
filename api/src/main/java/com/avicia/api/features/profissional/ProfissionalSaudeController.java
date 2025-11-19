@@ -17,11 +17,15 @@ import com.avicia.api.features.profissional.request.ProfissionalSaudeRequest;
 import com.avicia.api.features.profissional.response.ProfissionalSaudeResponse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/profissionais-saude")
 @RequiredArgsConstructor
 public class ProfissionalSaudeController {
+
+    // api/profissionais-saude/logado/id
 
     private final ProfissionalSaudeService profissionalService;
 
@@ -36,11 +40,17 @@ public class ProfissionalSaudeController {
     public ResponseEntity<List<ProfissionalSaudeResponse>> listarTodos() {
         return ResponseEntity.ok(profissionalService.listarTodos());
     }
+    
+    @GetMapping("/logado/id")
+    @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
+    public ResponseEntity<ProfissionalSaudeResponse> buscarIdProfissionalLogado() {
+        return ResponseEntity.ok(profissionalService.buscarIdProfissionalLogado());
+    }
+    
 
     @GetMapping("/{idProfissional}") // localhost:9081/api/profissionais-saude/{idProfissional}
     @PreAuthorize("hasAuthority('PROFISSIONALSAUDE_READ')")
     public ResponseEntity<ProfissionalSaudeResponse> buscarPorIdProfissional(@PathVariable Integer idProfissional) {
-
         return ResponseEntity.ok(profissionalService.buscarPorIdProfissional(idProfissional));
     }
 

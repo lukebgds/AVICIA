@@ -76,6 +76,12 @@ public class UsuarioService {
     }
 
     @Transactional
+    public UsuarioResponse buscarPorIdUsuario(Integer id) {
+        Usuario usuario = verificarUsuario.buscarUsuarioPorId(id);
+        return UsuarioMapper.toResponseDTO(usuario);
+    }
+
+    @Transactional
     public UsuarioResponse atualizar(String cpf, UsuarioRequest dto) {
         
         verificarUsuario.validarCpfNaoVazio(cpf);

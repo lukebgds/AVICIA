@@ -57,6 +57,9 @@ public class SecurityConfiguration {
                                                             // Recuperação de senha
                                                             .requestMatchers(HttpMethod.PUT, "/api/usuarios/recuperar-senha").permitAll()
 
+                                                            // Teste do OpenCL
+                                                            .requestMatchers(HttpMethod.POST, "/api/native/image-processor/process").permitAll()
+
                                                             .anyRequest().authenticated()
             )
             .cors(Customizer.withDefaults())

@@ -47,6 +47,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscaPorCpf(cpf));
     }
 
+    @GetMapping("/{idUsuario}")
+    @PreAuthorize("hasAuthority('USUARIO_READ')")
+    public ResponseEntity<UsuarioResponse> buscarPorIdUsuario(@PathVariable Integer idUsuario) {
+        return ResponseEntity.ok(usuarioService.buscarPorIdUsuario(idUsuario));
+    }
+
     @PutMapping("/{cpf}") // localhost:9081/api/usuarios/{cpf}
     @PreAuthorize("hasAuthority('USUARIO_UPDATE')")
     public ResponseEntity<UsuarioResponse> atualizar(@PathVariable String cpf, @RequestBody UsuarioRequest dto) {

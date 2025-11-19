@@ -12,6 +12,7 @@ import com.avicia.api.features.profissional.request.ProfissionalSaudeRequest;
 import com.avicia.api.features.profissional.response.ProfissionalSaudeResponse;
 import com.avicia.api.features.sistema.systemLog.SystemLogService;
 import com.avicia.api.features.usuario.Usuario;
+import com.avicia.api.util.UsuarioAutenticadoUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ public class ProfissionalSaudeService {
     private final ProfissionalSaudeRepository profissionalRepository;
     private final SystemLogService systemLogService;
     private final VerificarProfissionalSaude verificarProfissionalSaude;
+    private final UsuarioAutenticadoUtil usuarioAutenticadoUtil;
     
     @Transactional
     public ProfissionalSaudeResponse criar(ProfissionalSaudeRequest dto) {
@@ -67,6 +69,11 @@ public class ProfissionalSaudeService {
                 .collect(Collectors.toList());
     }
     
+    public ProfissionalSaudeResponse buscarIdProfissionalLogado() {
+        Integer id = usuarioAutenticadoUtil.getIdProfissionalSaude();
+        return buscarPorIdProfissional(id);
+    }
+
     @Transactional(readOnly = true)
     public ProfissionalSaudeResponse buscarPorIdProfissional(Integer idProfissional) {
         ProfissionalSaude profissional = verificarProfissionalSaude.buscarProfissionalPorId(idProfissional);
