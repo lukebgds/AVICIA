@@ -120,7 +120,7 @@ VALUES (
         "role": "N",
         "usuario": "CRUD",
         "paciente": "CRUD",
-        "profissionalSaude": "N",
+        "profissionalSaude": "R",
         "funcionario": "N",
         "convenio": "CRUD",
         "alergia": "CRUD",

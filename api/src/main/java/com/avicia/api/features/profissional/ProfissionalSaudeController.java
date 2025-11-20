@@ -17,7 +17,6 @@ import com.avicia.api.features.profissional.request.ProfissionalSaudeRequest;
 import com.avicia.api.features.profissional.response.ProfissionalSaudeResponse;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController

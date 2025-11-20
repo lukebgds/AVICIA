@@ -145,7 +145,8 @@ public class VerificarProfissionalSaude {
     public ProfissionalSaude buscarProfissionalPorId(Integer idProfissional) {
         validarIdProfissionalNaoNulo(idProfissional);
         Integer id = getIdUsuarioToken();
-        ProfissionalSaude profissionalSaude = profissionalRepository.findById(id).orElse(null);
+        ProfissionalSaude profissionalSaude = profissionalRepository.findById(idProfissional).orElse(null);
+        System.out.println(profissionalSaude);
         if (profissionalSaude == null) {
             systemError.error(id, "Profissional de Saúde", "Profissional de saúde com ID %d não encontrado", idProfissional);
         }
