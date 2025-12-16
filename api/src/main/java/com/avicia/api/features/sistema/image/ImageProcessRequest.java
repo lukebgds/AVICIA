@@ -1,4 +1,4 @@
-package com.avicia.api.features.sistema.image.process;
+package com.avicia.api.features.sistema.image;
 
 import lombok.Data;
 
@@ -6,8 +6,8 @@ import lombok.Data;
 public class ImageProcessRequest {
     
     private String inputPath;
-    private String outputPath;
     private float contrast;
     private float brightness;
+    private float saturation;
     
 }

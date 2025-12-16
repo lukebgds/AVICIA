@@ -41,13 +41,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
     
-    @GetMapping("/{cpf}")
+    @GetMapping("/cpf/{cpf}")
     @PreAuthorize("hasAuthority('USUARIO_READ')")
     public ResponseEntity<UsuarioResponse> buscarPorCpf(@PathVariable String cpf) {
         return ResponseEntity.ok(usuarioService.buscaPorCpf(cpf));
     }
 
-    @GetMapping("/{idUsuario}")
+    @GetMapping("/id/{idUsuario}")
     @PreAuthorize("hasAuthority('USUARIO_READ')")
     public ResponseEntity<UsuarioResponse> buscarPorIdUsuario(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(usuarioService.buscarPorIdUsuario(idUsuario));
@@ -60,7 +60,7 @@ public class UsuarioController {
     }
 
     // localhost:9081/api/usuarios/{cpf}/senha
-    @PutMapping("/alterar-senha")
+    @PutMapping("/{cpf}/alterar-senha")
     @PreAuthorize("hasAuthority('USUARIO_UPDATE')")
     public ResponseEntity<UsuarioResponse> atualizarSenha(@RequestBody AlterarSenhaRequest request) {
         UsuarioResponse usuario = usuarioService.atualizarSenha(request.senhaAtual(), request.senhaNova());

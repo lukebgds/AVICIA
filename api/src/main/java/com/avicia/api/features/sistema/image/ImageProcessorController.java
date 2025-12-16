@@ -1,12 +1,10 @@
-package com.avicia.api.features.sistema.image.process;
+package com.avicia.api.features.sistema.image;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.avicia.api.util.jni.image.ImageProcessorNative;
 
 import lombok.RequiredArgsConstructor;
 

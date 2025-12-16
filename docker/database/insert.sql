@@ -130,7 +130,7 @@ VALUES (
         "anexo": "CRUD",
         "associacao": "CRUD",
         "log": "R",
-        "consulta": "R",
+        "consulta": "CRUD",
         "diagnostico": "CRUD",
         "prescriacao": "CRUD",
         "exame": "CRUD",
