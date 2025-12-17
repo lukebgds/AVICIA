@@ -1,4 +1,4 @@
-package com.avicia.api.features.sistema.image.process;
+package com.avicia.api.features.sistema.image;
 
 import lombok.Data;
 

@@ -30,49 +30,49 @@ public class ExameSolicitadoController {
     private final ExameSolicitadoService exameSolicitadoService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarTodos() {
         return exameSolicitadoService.listarTodos();
     }
 
     @GetMapping("/consulta/{idConsulta}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorConsulta(@PathVariable Integer idConsulta) {
         return exameSolicitadoService.listarPorConsulta(idConsulta);
     }
 
     @GetMapping("/paciente/{idPaciente}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorPaciente(@PathVariable Integer idPaciente) {
         return exameSolicitadoService.listarPorPaciente(idPaciente);
     }
 
     @GetMapping("/paciente/{idPaciente}/ordenado")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorPacienteOrdenado(@PathVariable Integer idPaciente) {
         return exameSolicitadoService.listarPorPacienteOrdenado(idPaciente);
     }
 
     @GetMapping("/profissional/{idProfissional}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorProfissional(@PathVariable Integer idProfissional) {
         return exameSolicitadoService.listarPorProfissional(idProfissional);
     }
 
     @GetMapping("/tipo-exame/{idExame}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorTipoExame(@PathVariable Integer idExame) {
         return exameSolicitadoService.listarPorTipoExame(idExame);
     }
 
     @GetMapping("/status")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorStatus(@RequestParam String status) {
         return exameSolicitadoService.listarPorStatus(status);
     }
 
     @GetMapping("/paciente/{idPaciente}/status")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorPacienteEStatus(
             @PathVariable Integer idPaciente,
             @RequestParam String status) {
@@ -80,7 +80,7 @@ public class ExameSolicitadoController {
     }
 
     @GetMapping("/periodo")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorPeriodo(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
@@ -88,7 +88,7 @@ public class ExameSolicitadoController {
     }
 
     @GetMapping("/paciente/{idPaciente}/periodo")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public List<ExameSolicitadoResponse> listarPorPacienteEPeriodo(
             @PathVariable Integer idPaciente,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
@@ -97,19 +97,19 @@ public class ExameSolicitadoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_READ')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_READ')")
     public ResponseEntity<ExameSolicitadoResponse> buscarPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(exameSolicitadoService.buscarPorId(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_CREATE')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_CREATE')")
     public ExameSolicitadoResponse criar(@RequestBody ExameSolicitadoRequest dto) {
         return exameSolicitadoService.criar(dto);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_UPDATE')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_UPDATE')")
     public ResponseEntity<ExameSolicitadoResponse> atualizar(
             @PathVariable Integer id, 
             @RequestBody ExameSolicitadoRequest dto) { 
@@ -117,7 +117,7 @@ public class ExameSolicitadoController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_UPDATE')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_UPDATE')")
     public ResponseEntity<ExameSolicitadoResponse> atualizarStatus(
             @PathVariable Integer id,
             @RequestParam String status) {
@@ -125,7 +125,7 @@ public class ExameSolicitadoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('EXAMESOLICITADO_DELETE')")
+    @PreAuthorize("hasAuthority('EXAMESOLICITAR_DELETE')")
     public ResponseEntity<Void> deletar(@PathVariable Integer id) {
         exameSolicitadoService.deletar(id);
         return ResponseEntity.noContent().build();
