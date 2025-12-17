@@ -6,8 +6,8 @@ import lombok.Data;
 public class ImageProcessRequest {
     
     private String inputPath;
-    private float contrast;
-    private float brightness;
-    private float saturation;
+    private int contrast;
+    private int brightness;
+    private int saturation;
     
 }
