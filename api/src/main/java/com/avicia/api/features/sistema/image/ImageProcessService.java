@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Service;
 
@@ -106,7 +107,9 @@ public class ImageProcessService {
      * +100% = 2.0 (contraste máximo)
      */
     private float convertContrastToFloat(int contrastPercent) {
-        return 1.0f + (contrastPercent / 100.0f);
+        float x = 1.0f + (contrastPercent / 100.0f);
+        System.out.println(x);
+        return x;
     }
 
     /**
@@ -116,7 +119,9 @@ public class ImageProcessService {
      * +100% = 1.0 (muito claro)
      */
     private float convertBrightnessToFloat(int brightnessPercent) {
-        return brightnessPercent / 100.0f;
+        float x = brightnessPercent / 100.0f;
+        System.out.println(x);
+        return x;
     }
 
     /**
@@ -126,7 +131,8 @@ public class ImageProcessService {
      * +100% = 2.0 (saturação máxima)
      */
     private float convertSaturationToFloat(int saturationPercent) {
-        return 1.0f + (saturationPercent / 100.0f);
+        float x = 1.0f + (saturationPercent / 100.0f);
+        return x;
     }
 
     private String generateOutputFileName(String inputPath) {
@@ -165,11 +171,13 @@ public class ImageProcessService {
         command.add(executable.getAbsolutePath());
         command.add(inputPath);
         command.add(outputPath);
-        command.add(String.format("%.2f", contrast));
-        command.add(String.format("%.2f", brightness));
-        command.add(String.format("%.2f", saturation));
+        command.add(String.format(Locale.US, "%.2f", contrast));
+        command.add(String.format(Locale.US, "%.2f", brightness));
+        command.add(String.format(Locale.US, "%.2f", saturation));
 
         log.debug("Executando comando: {}", String.join(" ", command));
+
+        System.out.println(command);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true);
