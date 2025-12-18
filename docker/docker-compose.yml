@@ -36,6 +36,7 @@ services:
       SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true" 
     volumes:
       - ../api:/app
+      - "C:/Users/lbeni/OneDrive/Pictures:/app/images"
     ports:
       - "9081:9081"
     networks:

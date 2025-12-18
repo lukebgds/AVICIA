@@ -133,7 +133,7 @@ const Login = () => {
       showSuccess("Login realizado com sucesso!", "Bem-vindo ao AVICIA");
 
       setTimeout(() => {
-        navigate("/paciente/home", { replace: true });
+        navigate("/dashboard-medico", { replace: true });
       }, 0);
     } catch (error: any) {
       // Limpa ambos os campos

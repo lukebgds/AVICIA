@@ -58,17 +58,54 @@ interface UsuarioResponse {
   idRole: number;
 }
 
-interface PacienteResponse {
+export interface ProfissionalSaudeLogadoResponse {
+  idProfissional: number;
+  cargo: string;
+  conselho: string;
+  especialidade: string;
+  idProfissionalSaude: number;     
+  matricula: string;
+  registroConselho: string;
+  unidade: string;
+  usuario: {
+    ativo: boolean;
+    cpf: string;
+    dataCriacao: string;              
+    dataNascimento: string;          
+    email: string;
+    endereco: string;
+    estadoCivil: string;
+    idRole: number;
+    idUsuario: number;
+    mfaHabilitado: boolean;
+    nome: string;
+    sexo: string;
+    telefone: string;
+  };
+}
+
+export interface PacienteResponse {
   idPaciente: number;
   usuario: {
-    idUsuario: number;
-    nome: string;
+    ativo: boolean;
     cpf: string;
+    dataCriacao: string;              
+    dataNascimento: string;          
     email: string;
+    endereco: string;
+    estadoCivil: string;
+    idRole: number;
+    idUsuario: number;
+    mfaHabilitado: boolean;
+    nome: string;
+    sexo: string;
+    telefone: string;
   };
   profissao: string;
   preferenciaContato: string;
 }
+
+
 
 interface PacienteAlergiaResponse {
   idAlergia: number;
@@ -156,7 +193,24 @@ interface FuncionarioResponse {
   observacoes: string;
 }
 
-interface ConsultaResponse {
+export interface ProcessarImagemRequest {
+  inputPath: string;     
+  contrast: number;      
+  brightness: number;   
+  saturation: number; 
+}
+
+export interface ProcessarImagemResponse {
+  outputPath: string;
+}
+
+
+
+
+
+
+
+export interface ConsultaResponse {
   idConsulta: number;
   idPaciente: number;
   idProfissionalSaude: number;
@@ -167,6 +221,15 @@ interface ConsultaResponse {
   observacoes: string;
 }
 
+
+
+
+
+
+
+
+
+
 interface ConsultaDiagnosticoResponse {
   idDiagnostico: number;
   idConsulta: number;
@@ -174,7 +237,7 @@ interface ConsultaDiagnosticoResponse {
   descricao: string;
 }
 
-interface ConsultaPrescricaoResponse {
+export interface ConsultaPrescricaoResponse {
   idPrescricao: number;
   idConsulta: number;
   dataEmissao: string;
@@ -199,7 +262,18 @@ interface ExameResponse {
   ativo: boolean;
 }
 
-interface ExameSolicitadoResponse {
+
+
+
+
+
+
+
+
+
+
+
+export interface ExameSolicitadoResponse {
   idExameSolicitado: number;
   idConsulta: number;
   idPaciente: number;
@@ -210,6 +284,14 @@ interface ExameSolicitadoResponse {
   observacoes: string;
   status: string;
 }
+
+
+
+
+
+
+
+
 
 interface ExameResultadoResponse {
   idResultado: number;
@@ -233,7 +315,7 @@ interface InternacaoResponse {
   observacoes: string;
 }
 
-interface AgendaResponse {
+export interface AgendaResponse {
   idAgenda: number;
   idProfissionalSaude: number;
   idPaciente: number;
@@ -529,6 +611,35 @@ const apiFetch = async <T>(
 
 // --- API Services ---
 export const api = {
+
+
+
+
+
+  // --- Processamento de Imagem ---
+
+  processarImagem: async (
+    dados: ProcessarImagemRequest
+  ): Promise<ProcessarImagemResponse> => {
+    console.log("🖼️ Processando imagem com ajustes:", dados);
+    const resultado = await apiFetch<ProcessarImagemResponse>(
+      "/image/process",
+      { method: "POST", body: JSON.stringify(dados) },
+      true,
+      "Erro ao processar imagem"
+    );
+    console.log("✅🖼️ Imagem processada com sucesso:", resultado);
+    return resultado;
+  },
+
+
+
+
+
+
+
+
+  
   getRoleByName: async (roleName: string): Promise<RoleResponse> => {
     console.log("🔍 Buscando Role:", roleName);
     const role = await apiFetch<RoleResponse>(
@@ -593,6 +704,19 @@ export const api = {
     console.log("✅🛡️ Role criada:", roleCriada);
     return roleCriada;
   },
+
+  getProfissionalSaudeLogado:
+    async (): Promise<ProfissionalSaudeLogadoResponse> => {
+      console.log(" Buscando profissional de saúde logado...");
+      const profissional = await apiFetch<ProfissionalSaudeLogadoResponse>(
+        "/profissionais-saude/logado",
+        { method: "GET" },
+        true,
+        "Erro ao buscar profissional de saúde logado"
+      );
+      console.log(" Profissional de saúde logado carregado:", profissional);
+      return profissional;
+    },
 
   getAllRoles: async (): Promise<RoleResponse[]> => {
     console.log("🔍 Buscando todas as roles...");
@@ -877,6 +1001,14 @@ export const api = {
     return usuario;
   },
 
+
+
+
+
+
+
+
+
   getAllPacientes: async (): Promise<PacienteResponse[]> => {
     console.log("🏥 Buscando todos os pacientes...");
     const pacientes = await apiFetch<PacienteResponse[]>(
@@ -888,6 +1020,21 @@ export const api = {
     console.log("✅🏥 Pacientes carregados:", pacientes);
     return pacientes;
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   getPacienteByCpf: async (cpf: string): Promise<PacienteResponse> => {
     console.log("🏥 Buscando paciente por CPF:", cpf);
@@ -1945,6 +2092,19 @@ export const api = {
     return consultas;
   },
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   getConsultasByProfissional: async (
     idProfissional: number
   ): Promise<ConsultaResponse[]> => {
@@ -1958,6 +2118,19 @@ export const api = {
     console.log("✅🩺 Consultas por profissional carregadas:", consultas);
     return consultas;
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   getConsultasByPeriodo: async (
     dataInicio: string,
@@ -2109,6 +2282,17 @@ export const api = {
     console.log("✅🗑️ Diagnóstico de consulta deletado com sucesso");
   },
 
+
+
+
+
+
+
+
+
+
+
+
   getAllConsultaPrescricoes: async (): Promise<
     ConsultaPrescricaoResponse[]
   > => {
@@ -2122,6 +2306,13 @@ export const api = {
     console.log("✅💊 Prescrições de consulta carregadas:", prescricoes);
     return prescricoes;
   },
+
+
+
+
+
+
+
 
   getConsultaPrescricoesByConsulta: async (
     idConsulta: number
@@ -2137,6 +2328,12 @@ export const api = {
     return prescricoes;
   },
 
+
+
+
+
+
+
   getConsultaPrescricaoById: async (
     id: number
   ): Promise<ConsultaPrescricaoResponse> => {
@@ -2150,6 +2347,17 @@ export const api = {
     console.log("✅💊 Prescrição de consulta encontrada:", prescricao);
     return prescricao;
   },
+
+
+
+
+
+
+
+
+
+
+
 
   criarConsultaPrescricao: async (
     dados: ConsultaPrescricaoRequest
@@ -2360,6 +2568,20 @@ export const api = {
     console.log("✅🗑️ Exame deletado com sucesso");
   },
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   getAllExamesSolicitados: async (): Promise<ExameSolicitadoResponse[]> => {
     console.log("🧪 Buscando todos os exames solicitados...");
     const solicitados = await apiFetch<ExameSolicitadoResponse[]>(
@@ -2371,6 +2593,22 @@ export const api = {
     console.log("✅🧪 Exames solicitados carregados:", solicitados);
     return solicitados;
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   getExamesSolicitadosByConsulta: async (
     idConsulta: number
@@ -2389,6 +2627,21 @@ export const api = {
     return solicitados;
   },
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   getExamesSolicitadosByPaciente: async (
     idPaciente: number
   ): Promise<ExameSolicitadoResponse[]> => {
@@ -2405,6 +2658,17 @@ export const api = {
     );
     return solicitados;
   },
+
+
+
+
+
+
+
+
+
+
+
 
   getExamesSolicitadosByProfissional: async (
     idProfissional: number
@@ -2807,6 +3071,23 @@ export const api = {
     return agendas;
   },
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   getAgendasByProfissional: async (
     idProfissionalSaude: number
   ): Promise<AgendaResponse[]> => {
@@ -2820,6 +3101,22 @@ export const api = {
     console.log("✅📅 Agendas por profissional carregadas:", agendas);
     return agendas;
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   getAgendasByProfissionalOrdenado: async (
     idProfissionalSaude: number

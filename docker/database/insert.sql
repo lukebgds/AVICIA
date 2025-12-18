@@ -24,7 +24,7 @@ VALUES (
         "log": "R",
         "consulta": "R",
         "diagnostico": "R",
-        "prescriacao": "R",
+        "prescricao": "R",
         "exame": "R",
         "exameSolicitar": "CRD",
         "exameResultado": "R",
@@ -60,7 +60,7 @@ VALUES (
         "log": "CRUD",
         "consulta": "N",
         "diagnostico": "N",
-        "prescriacao": "N",
+        "prescricao": "N",
         "exame": "N",
         "exameSolicitar": "N",
         "exameResultado": "N",
@@ -96,7 +96,7 @@ VALUES (
         "log": "R",
         "consulta": "R",
         "diagnostico": "R",
-        "prescriacao": "R",
+        "prescricao": "R",
         "exame": "R",
         "exameSolicitar": "CRUD",
         "exameResultado": "CRUD",
@@ -132,12 +132,13 @@ VALUES (
         "log": "R",
         "consulta": "CRUD",
         "diagnostico": "CRUD",
-        "prescriacao": "CRUD",
+        "prescricao": "CRUD",
         "exame": "CRUD",
         "exameSolicitar": "CRUD",
         "exameResultado": "CRUD",
         "internacao": "R",
-        "relatorio": "R"
+        "relatorio": "R",
+        "agenda": "CRUD"
     }'::jsonb,
     'Profissional de saúde (médico/enfermeiro)'
 );

@@ -1,9 +1,8 @@
 // src/pages/AdminDashboard/index.tsx
 import React, { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Activity,
   Users,
@@ -32,7 +31,6 @@ const LogsSection = React.memo(LogsSectionBase);
 const SettingsSection = React.memo(SettingsSectionBase);
 
 const AdminDashboardMain: React.FC = () => {
-  useAuthGuard();
   const { token } = useAuth();
   const { activeUserCount } = useUsers(token);
 
