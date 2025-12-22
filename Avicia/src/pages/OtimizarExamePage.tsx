@@ -4,15 +4,14 @@ import { DashboardHeader } from "@/components/auth/dashboard/DashboardHeader";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/services/api";
 
+import raioX from "@/assets/raiox.jpeg";
+
 type Tab = "dashboard" | "agenda" | "relatorios" | "pacientes";
 
 const OtimizarExamePage = () => {
   const navigate = useNavigate();
 
-  const LOCAL_INPUT_PATH = "C:/raiox.jpeg"; 
-
-  const PREVIEW_IMAGE_URL =
-    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=1000&auto=format&fit=crop";
+  const LOCAL_INPUT_PATH = "C:/raiox.jpeg";
 
   const [brightness, setBrightness] = useState(0);
   const [contrast, setContrast] = useState(0);
@@ -82,7 +81,7 @@ const OtimizarExamePage = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 overflow-hidden">
               <img
-                src={PREVIEW_IMAGE_URL}
+                src={raioX} // ← Agora usa a imagem importada
                 alt="Exame (Raio-X)"
                 className="w-full h-auto object-contain"
                 style={{
