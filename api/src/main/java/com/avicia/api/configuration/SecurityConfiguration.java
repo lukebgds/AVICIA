@@ -4,6 +4,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,7 +20,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.avicia.api.util.CustomJwtConverter;
+import com.avicia.api.features.sistema.token.CustomJwtConverter;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -50,6 +51,14 @@ public class SecurityConfiguration {
 
                                                             // Login Admin
                                                             .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
+                                                            // Email
+                                                            .requestMatchers(HttpMethod.POST, "/api/sistema/auth/2fa/enviar").permitAll()
+                                                            .requestMatchers(HttpMethod.POST, "/api/sistema/auth/2fa/validar").permitAll()
+                                                            // Recuperação de senha
+                                                            .requestMatchers(HttpMethod.PUT, "/api/usuarios/recuperar-senha").permitAll()
+
+                                                            // Processamento de Imagem
+                                                            .requestMatchers(HttpMethod.POST, "/api/image/process").permitAll()
 
                                                             .anyRequest().authenticated()
             )

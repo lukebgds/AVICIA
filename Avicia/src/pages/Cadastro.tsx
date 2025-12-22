@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import {
   Select,
   SelectContent,
@@ -12,20 +12,22 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User,
-  Mail,
-  Lock,
-  Stethoscope,
-  Phone,
-  Calendar,
-  MapPin,
-  Briefcase,
   Eye,
   EyeOff,
   AlertCircle,
+  User,
+  FileText,
+  Phone,
+  Mail,
+  Lock,
+  MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+
+// Caminhos para os assets na pasta /public
+import AviciaLogo from "/logo.svg";
+import CadastroIllustration from "/CadastroIllustration.svg";
 
 const Cadastro = () => {
   const { toast } = useToast();
@@ -45,12 +47,19 @@ const Cadastro = () => {
     sexo: "",
     estadoCivil: "",
     profissao: "",
+    concordoTermos: false,
   });
 
   const [loading, setLoading] = useState(false);
-
-  // Erros inline (genérico para todos os campos)
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // --- ANIMAÇÃO: estado para entrada suave ---
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   // --- Helpers ---
   const clearError = (field: string) => {
@@ -59,6 +68,14 @@ const Cadastro = () => {
       delete next[field];
       return next;
     });
+  };
+
+  const isValidPassword = (password: string): boolean => {
+    if (password.length < 8) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/[a-z]/.test(password)) return false;
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return false;
+    return true;
   };
 
   const formatCPF = (value: string) => {
@@ -72,11 +89,8 @@ const Cadastro = () => {
     return numeric;
   };
 
-  // Função para validar todos os campos e definir erros inline (chamada no submit)
   const validateAllFields = () => {
-    // Limpa erros existentes antes de validar
     setErrors({});
-
     let hasError = false;
 
     const required = [
@@ -91,19 +105,23 @@ const Cadastro = () => {
       "sexo",
       "estadoCivil",
       "profissao",
+      "concordoTermos",
     ] as const;
 
-    // Verifica campos vazios e define erros
     const nextErrors: { [key: string]: string } = {};
     for (const field of required) {
       const value = formData[field as keyof typeof formData];
-      if (!value?.toString().trim()) {
+      if (field === "concordoTermos") {
+        if (!value) {
+          nextErrors[field] = "Você deve concordar com os termos e políticas";
+          hasError = true;
+        }
+      } else if (!value?.toString().trim()) {
         nextErrors[field] = "Preencha este campo";
         hasError = true;
       }
     }
 
-    // Validações específicas (apenas se não vazio)
     if (formData.cpf.trim()) {
       const cpfDigits = formData.cpf.replace(/\D/g, "");
       if (cpfDigits.length !== 11) {
@@ -121,8 +139,9 @@ const Cadastro = () => {
     }
 
     if (formData.password.trim()) {
-      if (formData.password.length < 8) {
-        nextErrors.password = "A senha deve ter pelo menos 8 caracteres";
+      if (!isValidPassword(formData.password)) {
+        nextErrors.password =
+          "Senha: ≥8 caracteres (1 maiúscula, 1 minúscula, 1 especial)";
         hasError = true;
       }
     }
@@ -134,12 +153,10 @@ const Cadastro = () => {
       }
     }
 
-    // Aplica os erros
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
     }
 
-    // Retorna se válido
     return !hasError;
   };
 
@@ -167,7 +184,6 @@ const Cadastro = () => {
     setFormData((prev) => ({ ...prev, [id]: value }));
     clearError(id);
 
-    // Limpa erro de confirmPassword se senha foi alterada
     if (id === "password") {
       clearError("confirmPassword");
     }
@@ -181,13 +197,11 @@ const Cadastro = () => {
   const handleBlur = (field: string) => {
     const value = formData[field as keyof typeof formData];
 
-    // SEMPRE checa se vazio PRIMEIRO (para TODOS os campos)
     if (!value?.toString().trim()) {
       setErrors((prev) => ({ ...prev, [field]: "Preencha este campo" }));
       return;
     }
 
-    // Se não vazio, checa validações específicas (só para campos críticos)
     const next = { ...errors };
 
     if (field === "cpf") {
@@ -201,22 +215,37 @@ const Cadastro = () => {
         next.telefone = "Telefone deve conter exatamente 11 números";
       else delete next.telefone;
     } else if (field === "password") {
-      if (value.toString().length < 8)
-        next.password = "A senha deve ter pelo menos 8 caracteres";
+      if (!isValidPassword(value.toString()))
+        next.password =
+          "Senha: ≥8 caracteres (1 maiúscula, 1 minúscula, 1 especial)";
       else delete next.password;
     } else if (field === "confirmPassword") {
       if (value.toString() !== formData.password)
         next.confirmPassword = "As senhas não coincidem";
       else delete next.confirmPassword;
+    } else if (field === "dataNascimento") {
+      const rawValue = formData.dataNascimento.toString();
+      const parts = rawValue.split("/");
+      if (parts.length === 3 && parts.every((p) => /^\d+$/.test(p))) {
+        const day = parts[0].padStart(2, "0");
+        const month = parts[1].padStart(2, "0");
+        const year = parts[2].padStart(4, "0");
+        const formatted = `${year}-${month}-${day}`;
+        setFormData((prev) => ({ ...prev, dataNascimento: formatted }));
+      }
+      delete next.dataNascimento;
     } else {
-      // Para outros campos não vazios, limpa (sem validação extra)
       delete next[field];
     }
 
     setErrors(next);
   };
 
-  // --- Validação completa antes do submit (com toast se inválido) ---
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, concordoTermos: e.target.checked }));
+    clearError("concordoTermos");
+  };
+
   const validateForm = (): boolean => {
     const isValid = validateAllFields();
     if (!isValid) {
@@ -229,25 +258,21 @@ const Cadastro = () => {
     return isValid;
   };
 
-  // --- Submit para API ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return; // Impede cadastro se inválido, com toast
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
       const role = await api.getRoleByName("PACIENTE");
       const idRole = role.idRole;
 
-      // CPF como número inteiro (sem formatação)
       const cpfNumerico = formData.cpf.replace(/\D/g, "");
-
-      // Telefone como número inteiro (sem formatação)
       const telefoneNumerico = formData.telefone.replace(/\D/g, "");
 
       const usuarioData = {
         nome: formData.name.trim(),
-        cpf: cpfNumerico, // Enviado como "12345678901"
+        cpf: cpfNumerico,
         dataNascimento: formData.dataNascimento,
         sexo:
           formData.sexo === "M"
@@ -260,7 +285,7 @@ const Cadastro = () => {
           : "",
         email: formData.email,
         senha: formData.password,
-        telefone: telefoneNumerico, // Enviado como "81996378721"
+        telefone: telefoneNumerico,
         endereco: formData.endereco,
         ativo: true,
         mfaHabilitado: false,
@@ -276,17 +301,20 @@ const Cadastro = () => {
         preferenciaContato: "EMAIL",
       });
 
-      toast({
-        title: "Cadastro realizado com sucesso!",
-      });
-
+      toast({ title: "Cadastro realizado com sucesso!" });
       navigate("/login");
     } catch (error: any) {
       console.error("Erro no cadastro:", error);
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
+      setShowPassword(false);
+      setShowConfirmPassword(false);
       toast({
         title: "Erro no cadastro",
-        description:
-          error?.response?.data?.message || "Erro inesperado. Tente novamente.",
+        description: "Erro inesperado. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -295,114 +323,206 @@ const Cadastro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-100 flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-lg flex flex-col items-center gap-6">
-        <div className="flex flex-col items-center text-center">
-          <div className="bg-blue-600 rounded-full p-3 shadow-lg transform transition-transform hover:scale-105 mb-4">
-            <Stethoscope className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent tracking-tight leading-tight">
-            AVICIA
-          </h1>
-          <p className="text-gray-600 mt-1 text-lg font-medium leading-relaxed">
-            Crie sua conta em minutos
-          </p>
+    <main className="flex min-h-screen">
+      {/* Coluna da Esquerda: Imagem de Fundo e Logo */}
+      <div
+        className="relative flex flex-col w-[60%] p-10 max-md:hidden"
+        style={{
+          background:
+            "linear-gradient(180deg, #0575E6 0%, #02298A 84.79%, #021B79 100%)",
+        }}
+      >
+        <img
+          src={AviciaLogo}
+          alt="AVICia Logo"
+          className="w-36 object-contain z-10"
+        />
+        <div className="flex-grow flex items-center justify-center px-8">
+          <img
+            src={CadastroIllustration}
+            alt="Ilustração de Cadastro"
+            className="max-h-[700px] w-auto object-contain"
+          />
+        </div>
+      </div>
+
+      {/* Coluna da Direita: Formulário */}
+      <div className="flex flex-col items-center justify-center w-[40%] p-10 bg-white max-md:w-full max-md:p-5 min-h-screen">
+        <div className="hidden max-md:block mb-8">
+          <img
+            src={AviciaLogo}
+            alt="AVICia Logo"
+            className="w-28 object-contain"
+          />
         </div>
 
-        <Card className="shadow-2xl border border-blue-200/50 bg-white/95 backdrop-blur-sm rounded-2xl w-full">
-          <CardHeader className="text-center py-4">
-            <CardTitle className="text-3xl font-semibold text-blue-700 flex items-center justify-center gap-2 relative right-2">
-              <User className="h-7 w-7" /> Criar Conta
-            </CardTitle>
-          </CardHeader>
+        <div className="max-w-[480px] w-full px-4 md:px-0">
+          <div
+            className={`
+              transition-all duration-300 ease-out
+              ${
+                isMounted
+                  ? "opacity-100 translate-y-0 filter blur-0"
+                  : "opacity-0 translate-y-5 filter blur-[3px]"
+              }
+            `}
+          >
+            <header className="mb-6">
+              <h1 className="text-[#1E255E] text-[26px] font-semibold mb-2">
+                Faça seu cadastro:
+              </h1>
+              <p className="text-[#44494F] text-lg font-normal">
+                Vamos preparar tudo para que você possa acessar sua conta
+                pessoal.
+              </p>
+            </header>
 
-          <CardContent className="px-9 py-4">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Nome */}
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              {/* === NOME COMPLETO === */}
               <div className="space-y-1">
                 <Label
                   htmlFor="name"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Nome Completo
+                  Nome completo:
                 </Label>
                 <div className="relative group">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     id="name"
                     placeholder="Digite seu nome completo"
-                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                      errors.name ? "border-red-500" : ""
-                    }`}
                     value={formData.name}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("name")}
+                    className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                      errors.name ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
                 {errors.name && (
-                  <div className="flex items-center text-xs text-red-500 mt-1">
-                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span>{errors.name}</span>
-                  </div>
+                  <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {errors.name}
+                  </p>
                 )}
               </div>
 
-              {/* Email */}
+              {/* === CPF + TELEFONE === */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="cpf"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    CPF:
+                  </Label>
+                  <div className="relative group">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Input
+                      id="cpf"
+                      placeholder="000.000.000-00"
+                      value={formData.cpf}
+                      onChange={handleInputChange}
+                      onBlur={() => handleBlur("cpf")}
+                      className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                        errors.cpf ? "border-red-500" : ""
+                      }`}
+                    />
+                  </div>
+                  {errors.cpf && (
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.cpf}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="telefone"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Telefone:
+                  </Label>
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Input
+                      id="telefone"
+                      placeholder="(00) 00000-0000"
+                      value={formData.telefone}
+                      onChange={handleInputChange}
+                      onBlur={() => handleBlur("telefone")}
+                      className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                        errors.telefone ? "border-red-500" : ""
+                      }`}
+                    />
+                  </div>
+                  {errors.telefone && (
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.telefone}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* === E-MAIL === */}
               <div className="space-y-1">
                 <Label
                   htmlFor="email"
                   className="text-sm font-medium text-gray-700"
                 >
-                  E-mail
+                  E-mail:
                 </Label>
                 <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                      errors.email ? "border-red-500" : ""
-                    }`}
+                    type="text"
+                    placeholder="Insira seu e-mail"
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("email")}
+                    className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                      errors.email ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
                 {errors.email && (
-                  <div className="flex items-center text-xs text-red-500 mt-1">
-                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span>{errors.email}</span>
-                  </div>
+                  <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
-              {/* Senhas */}
+              {/* === SENHA + CONFIRMAR === */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label
                     htmlFor="password"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Senha
+                    Senha:
                   </Label>
                   <div className="relative group">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Digite sua senha"
-                      className={`pl-10 pr-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.password ? "border-red-500" : ""
-                      }`}
                       value={formData.password}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("password")}
+                      maxLength={30}
+                      className={`pl-10 pr-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                        errors.password ? "border-red-500" : ""
+                      }`}
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showPassword ? (
                         <Eye className="h-5 w-5" />
@@ -412,10 +532,10 @@ const Cadastro = () => {
                     </button>
                   </div>
                   {errors.password && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.password}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.password}
+                    </p>
                   )}
                 </div>
 
@@ -424,27 +544,28 @@ const Cadastro = () => {
                     htmlFor="confirmPassword"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Confirmar Senha
+                    Confirmar senha:
                   </Label>
                   <div className="relative group">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirme sua senha"
-                      className={`pl-10 pr-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.confirmPassword ? "border-red-500" : ""
-                      }`}
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("confirmPassword")}
+                      maxLength={30}
+                      className={`pl-10 pr-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                        errors.confirmPassword ? "border-red-500" : ""
+                      }`}
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showConfirmPassword ? (
                         <Eye className="h-5 w-5" />
@@ -454,125 +575,70 @@ const Cadastro = () => {
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.confirmPassword}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.confirmPassword}
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* CPF e Telefone */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label
-                    htmlFor="cpf"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    CPF
-                  </Label>
-                  <Input
-                    id="cpf"
-                    placeholder="000.000.000-00"
-                    className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                      errors.cpf ? "border-red-500" : ""
-                    }`}
-                    value={formData.cpf}
-                    onChange={handleInputChange}
-                    onBlur={() => handleBlur("cpf")}
-                  />
-                  {errors.cpf && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.cpf}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label
-                    htmlFor="telefone"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Telefone
-                  </Label>
-                  <div className="relative group">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                    <Input
-                      id="telefone"
-                      placeholder="(00) 00000-0000"
-                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.telefone ? "border-red-500" : ""
-                      }`}
-                      value={formData.telefone}
-                      onChange={handleInputChange}
-                      onBlur={() => handleBlur("telefone")}
-                    />
-                  </div>
-                  {errors.telefone && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.telefone}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Endereço */}
+              {/* === ENDEREÇO === */}
               <div className="space-y-1">
                 <Label
                   htmlFor="endereco"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Endereço
+                  Endereço:
                 </Label>
                 <div className="relative group">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     id="endereco"
                     placeholder="Digite seu endereço completo"
-                    className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                      errors.endereco ? "border-red-500" : ""
-                    }`}
                     value={formData.endereco}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur("endereco")}
+                    className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                      errors.endereco ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
                 {errors.endereco && (
-                  <div className="flex items-center text-xs text-red-500 mt-1">
-                    <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span>{errors.endereco}</span>
-                  </div>
+                  <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {errors.endereco}
+                  </p>
                 )}
               </div>
 
-              {/* Data de Nascimento e Sexo */}
+              {/* === DATA + SEXO === */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label
                     htmlFor="dataNascimento"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Data de Nascimento
+                    Data de nascimento:
                   </Label>
                   <div className="relative group">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
                     <Input
                       id="dataNascimento"
                       type="date"
-                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.dataNascimento ? "border-red-500" : ""
-                      }`}
                       value={formData.dataNascimento}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("dataNascimento")}
+                      className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                        errors.dataNascimento ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                   {errors.dataNascimento && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.dataNascimento}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.dataNascimento}
+                    </p>
                   )}
                 </div>
 
@@ -581,70 +647,78 @@ const Cadastro = () => {
                     htmlFor="sexo"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Sexo
+                    Sexo:
                   </Label>
-                  <Select
-                    value={formData.sexo}
-                    onValueChange={(value) => handleSelectChange("sexo", value)}
-                  >
-                    <SelectTrigger
-                      className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.sexo ? "border-red-500" : ""
-                      }`}
-                      onBlur={() => handleBlur("sexo")}
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                    <Select
+                      value={formData.sexo}
+                      onValueChange={(v) => handleSelectChange("sexo", v)}
                     >
-                      <SelectValue placeholder="Selecione o sexo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="M">Masculino</SelectItem>
-                      <SelectItem value="F">Feminino</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger
+                        className={`pl-10 h-11 text-sm border rounded-3xl focus:border-blue-500 focus:outline-none focus:ring-0 data-[state=open]:border-blue-500 ${
+                          errors.sexo ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        <SelectValue placeholder="Seu sexo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M">Masculino</SelectItem>
+                        <SelectItem value="F">Feminino</SelectItem>
+                        <SelectItem value="Outro">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {errors.sexo && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.sexo}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.sexo}
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* Estado Civil e Profissão */}
+              {/* === ESTADO CIVIL + PROFISSÃO === */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label
                     htmlFor="estadoCivil"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Estado Civil
+                    Estado Civil:
                   </Label>
-                  <Select
-                    value={formData.estadoCivil}
-                    onValueChange={(value) =>
-                      handleSelectChange("estadoCivil", value)
-                    }
-                  >
-                    <SelectTrigger
-                      className={`py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.estadoCivil ? "border-red-500" : ""
-                      }`}
-                      onBlur={() => handleBlur("estadoCivil")}
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                    <Select
+                      value={formData.estadoCivil}
+                      onValueChange={(v) =>
+                        handleSelectChange("estadoCivil", v)
+                      }
                     >
-                      <SelectValue placeholder="Selecione o estado civil" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                      <SelectItem value="casado">Casado(a)</SelectItem>
-                      <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                      <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger
+                        className={`pl-10 h-11 text-sm border rounded-3xl focus:border-blue-500 focus:outline-none focus:ring-0 data-[state=open]:border-blue-500 ${
+                          errors.estadoCivil
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        <SelectValue placeholder="Selecione o estado civil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                        <SelectItem value="casado">Casado(a)</SelectItem>
+                        <SelectItem value="divorciado">
+                          Divorciado(a)
+                        </SelectItem>
+                        <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {errors.estadoCivil && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.estadoCivil}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.estadoCivil}
+                    </p>
                   )}
                 </div>
 
@@ -653,57 +727,85 @@ const Cadastro = () => {
                     htmlFor="profissao"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Profissão
+                    Digite sua profissão:
                   </Label>
                   <div className="relative group">
-                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input
                       id="profissao"
-                      placeholder="Digite sua profissão"
-                      className={`pl-10 py-2.5 border border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-lg ${
-                        errors.profissao ? "border-red-500" : ""
-                      }`}
+                      placeholder="Sua profissão"
                       value={formData.profissao}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur("profissao")}
+                      className={`pl-10 h-11 text-sm border border-gray-300 rounded-3xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-400 ${
+                        errors.profissao ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                   {errors.profissao && (
-                    <div className="flex items-center text-xs text-red-500 mt-1">
-                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{errors.profissao}</span>
-                    </div>
+                    <p className="flex items-center text-xs text-red-500 mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {errors.profissao}
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* Botão */}
-              <div className="mt-8">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg duration-300"
+              {/* === CHECKBOX === */}
+              <div className="flex items-start gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="concordoTermos"
+                  checked={formData.concordoTermos}
+                  onChange={handleCheckboxChange}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-[#0061FE] focus:ring-[#0061FE]"
+                />
+                <label
+                  htmlFor="concordoTermos"
+                  className="text-sm text-[#44494F]"
                 >
-                  {loading ? "Criando..." : "Criar Conta"}
-                </Button>
+                  Concordo com todos os{" "}
+                  <a href="#" className="font-medium text-[#0061FE]">
+                    Termos
+                  </a>{" "}
+                  e{" "}
+                  <a href="#" className="font-medium text-[#0061FE]">
+                    Políticas de Privacidade
+                  </a>
+                </label>
               </div>
-
-              <div className="text-center mt-6">
-                <p className="text-gray-600 text-sm">
-                  Já possui uma conta?{" "}
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="text-blue-600 font-medium hover:underline hover:text-blue-700 transition-colors"
-                  >
-                    Fazer login
-                  </button>
+              {errors.concordoTermos && (
+                <p className="flex items-center text-xs text-red-500 -mt-1 animate-in fade-in-0 slide-in-from-top-1 duration-300">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.concordoTermos}
                 </p>
-              </div>
+              )}
+
+              {/* === BOTÃO === */}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 mt-6 bg-[#0061FE] hover:bg-blue-700 text-white font-medium text-base rounded-full"
+              >
+                {loading ? "Criando..." : "Criar conta"}
+              </Button>
+
+              {/* === LOGIN === */}
+              <p className="text-center text-sm text-gray-600 mt-6">
+                Já possui uma conta?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="text-[#0061FE] font-medium hover:underline"
+                >
+                  Fazer login
+                </button>
+              </p>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 

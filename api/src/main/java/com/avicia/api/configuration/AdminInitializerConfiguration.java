@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
-import com.avicia.api.model.Role;
-import com.avicia.api.model.Usuario;
-import com.avicia.api.repository.RoleRepository;
-import com.avicia.api.repository.UsuarioRepository;
+import com.avicia.api.features.sistema.role.Role;
+import com.avicia.api.features.sistema.role.RoleRepository;
+import com.avicia.api.features.usuario.Usuario;
+import com.avicia.api.features.usuario.UsuarioRepository;
 
 @Configuration
 public class AdminInitializerConfiguration {

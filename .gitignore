@@ -85,3 +85,6 @@ lib-cov
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# SonarQube 
+SonarQube-Docker
+

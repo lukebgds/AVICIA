@@ -133,3 +133,8 @@ input::-webkit-credentials-auto-fill-button,
 input::-webkit-textfield-decoration-container {
   display: none !important;
 }
+
+input::-webkit-date-and-time-value {
+  text-shadow: none !important;
+  color: inherit !important;
+}

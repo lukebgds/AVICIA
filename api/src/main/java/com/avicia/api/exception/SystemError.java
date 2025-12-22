@@ -21,7 +21,7 @@ public class SystemError {
     public void error(Integer idUsuario, String contexto, String mensagem, Object... params) {
         throw new BusinessException(
             idUsuario != null ? idUsuario : 100,
-            contexto != null ? contexto : "Usuario",
+            contexto != null ? contexto : "Sistema",
             mensagem, params
         );
     }
